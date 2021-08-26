@@ -1,0 +1,3 @@
+from .bow_vectorizer import BONgramsVectorizer
+from .cbow_vectorizers import WordByCategoryCBOWVectorizer
+from .torch_index_vectorizer import Word2IndexVectorizer

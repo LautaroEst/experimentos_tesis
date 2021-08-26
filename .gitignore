@@ -1,0 +1,7 @@
+.vscode/*
+data/*
+*.pkl
+.ipynb_checkpoints*
+__pycache__*
+*.tar.gz
+*.bin
