@@ -16,33 +16,25 @@ def sparse_matrix_log(X):
     X.data = np.log(X.data,where=X.data != 0.) # log(0) = 0
     return X 
 
-# Ambas funciones reciben la salida de CountVectorizer
-
-def ppmi(X):
-    sum_all = X.sum()
-    if issparse(X):
-        prob_col = np.asarray(X.sum(axis=1)).squeeze() / sum_all
-        prob_row = np.asarray(X.sum(axis=0)).squeeze() / sum_all
-        prob_all = X / sum_all
-        prob_all = sparse_matrix_by_row(prob_all,prob_row,op=np.divide)
-        prob_all = sparse_matrix_by_column(prob_all,prob_col,op=np.divide)
-        prob_all = sparse_matrix_log(prob_all).maximum(0)
-    else:
-        prob_col = X.sum(axis=1,keepdims=True) / sum_all
-        prob_row = X.sum(axis=0,keepdims=True) / sum_all
-        prob_all = X / sum_all
-        prob_all = prob_all / prob_row
-        prob_all = prob_all / prob_col
-        prob_all = np.maximum(np.log(prob_all,where=prob_all!=0),0)
-    return prob_all
 
 def tfidf(X):
-    if issparse(X):
-        idf = np.log(X.shape[0] / np.asarray(X.astype(bool).sum(axis=0)).squeeze())
-        tf = sparse_matrix_by_column(X,np.asarray(X.sum(axis=1)).squeeze(),op=np.divide)
-        X_tfidf = sparse_matrix_by_row(tf,idf,op=np.multiply)
-    else:
-        idf = np.log( X.shape[0] / X.astype(bool).sum(axis=0,keepdims=True))
-        tf = X / X.sum(axis=1,keepdims=True)
-        X_tfidf = tf * idf
+    """
+    Convierte una matriz sparse de dimension (n_docs x n_words) en la matriz tfidf
+    """
+    idf = np.log(X.shape[0] / np.asarray(X.astype(bool).sum(axis=0)).squeeze())
+    tf = sparse_matrix_by_column(X,np.asarray(X.sum(axis=1)).squeeze(),op=np.divide)
+    X_tfidf = sparse_matrix_by_row(tf,idf,op=np.multiply)
     return X_tfidf
+
+def ppmi(X):
+    """
+    Convierte una matriz sparse de dimension (n_docs x n_words) en la matriz ppmi
+    """
+    sum_all = X.sum()
+    prob_col = np.asarray(X.sum(axis=1)).squeeze() / sum_all
+    prob_row = np.asarray(X.sum(axis=0)).squeeze() / sum_all
+    prob_all = X / sum_all
+    prob_all = sparse_matrix_by_row(prob_all,prob_row,op=np.divide)
+    prob_all = sparse_matrix_by_column(prob_all,prob_col,op=np.divide)
+    prob_all = sparse_matrix_log(prob_all).maximum(0)
+    return prob_all
