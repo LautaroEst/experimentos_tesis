@@ -1,5 +1,6 @@
 .vscode/*
 data/*
+datav2/*
 *.pkl
 .ipynb_checkpoints*
 __pycache__*

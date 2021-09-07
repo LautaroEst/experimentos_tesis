@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.sparse import csr_matrix, issparse
 
 def sparse_matrix_by_column(X,column,op):
     X = X.copy()
@@ -17,16 +16,18 @@ def sparse_matrix_log(X):
     return X 
 
 
-def tfidf(X):
+def sparse_tfidf(X):
     """
     Convierte una matriz sparse de dimension (n_docs x n_words) en la matriz tfidf
     """
-    idf = np.log(X.shape[0] / np.asarray(X.astype(bool).sum(axis=0)).squeeze())
+    df = np.bincount(X.indices, minlength=X.shape[1])/ X.shape[0]
+    idf = np.zeros_like(df)
+    idf[df != 0] = -np.log(df[df != 0])
     tf = sparse_matrix_by_column(X,np.asarray(X.sum(axis=1)).squeeze(),op=np.divide)
     X_tfidf = sparse_matrix_by_row(tf,idf,op=np.multiply)
     return X_tfidf
 
-def ppmi(X):
+def sparse_ppmi(X):
     """
     Convierte una matriz sparse de dimension (n_docs x n_words) en la matriz ppmi
     """

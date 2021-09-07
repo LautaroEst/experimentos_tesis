@@ -1,2 +1,2 @@
 from .visualization import *
-from .reweighting import *
+from .sparse_reweighting import sparse_tfidf, sparse_ppmi
