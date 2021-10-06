@@ -21,7 +21,7 @@ def load_data(DATA_PATH,split='train',nclasses=2):
         df.loc[df['review_rate'] == 3,['review_rate']] = 1.
         print('Dataset cargado para 3 clases (malo=0, medio=1, bueno=2)')
     elif nclasses == 5:
-        print('Dataset cargado para 5 clases (muy malo=0, malo=2, medio=3, bueno=4 muy bueno=1)')
+        print('Dataset cargado para 5 clases (muy malo=1, malo=2, medio=3, bueno=4 muy bueno=5)')
     else:
         raise TypeError('nclasses must be either 2, 3 or 5')
         
