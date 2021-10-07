@@ -1,0 +1,22 @@
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo recurrente de una capa para clasificar dos clases en español. Hyperparams: max_words=10000, trunc=128, embedding_dim=300, hidden_size=200, batch_size=128, learning_rate=1e-4, epochs=1. Devsize: 0.05
+
+
+Classification report:
+----------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.50      0.48      0.49    175672
+           1       0.50      0.53      0.52    175714
+
+    accuracy                           0.50    351386
+   macro avg       0.50      0.50      0.50    351386
+weighted avg       0.50      0.50      0.50    351386
+
+
+    

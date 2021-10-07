@@ -100,7 +100,7 @@ def main(args):
 
     # Model initialization:
     print('Initializing the model...')
-    model = Classifier()
+    model = Classifier(nclasses)
 
     # Model training:
     print('Training...')

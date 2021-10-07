@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 import os
+import pickle
 
 import utils
 from model import Classifier
@@ -106,11 +107,12 @@ def main(args):
 
     # Model initialization:
     print('Initializing the model...')
-    model = Classifier()
+    model = Classifier(nclasses)
 
     # Model training:
     print('Training...')
-    model.train(df_train['review_content'],df_train['review_rate'].values)
+    history = model.train(df_train['review_content'],df_train['review_rate'].values,
+                eval_every=100,dev=(df_dev['review_content'],df_dev['review_rate'].values))
 
     # Model evaluation:
     print('Evaluating results on train...')
@@ -127,6 +129,8 @@ def main(args):
         y_true = df_dev['review_rate'].values
         show_results(y_predict,y_true,nclasses,dev_title,description)
 
+    with open(now.strftime("results/%Y-%m-%d-%H-%M-%S_history.pkl"),'wb') as f:
+        pickle.dump(history,f)
 
 
 if __name__ == '__main__':
