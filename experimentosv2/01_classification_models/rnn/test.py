@@ -104,7 +104,10 @@ def main(args):
 
     # Model training:
     print('Training...')
-    model.train(df_train['review_content'],df_train['review_rate'].values)
+    model.train(
+                    df_train['review_content'],
+                    df_train['review_rate'].values
+                )
 
     # Model evaluation:
     now = datetime.now()

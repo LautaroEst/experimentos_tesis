@@ -59,10 +59,6 @@ def batch_iter(ds,y,vocab,batch_size):
         yield padded_sequences, sent_lenghts, y_batch
 
                                 
-    
-
-
-
 
 class Classifier(object):
 
@@ -80,18 +76,15 @@ class Classifier(object):
         self.nclasses = nclasses
         self.device_type = 'cuda:1'
 
-    def check_accuracy(self,model,sequence_batch, seq_len, y_batch):
-        model.eval()
-
+    def check_accuracy(self, scores, y_batch):
+        
         with torch.no_grad():
-            scores = model(sequence_batch,seq_len)
             y_pred = torch.argmax(scores,dim=1).cpu().numpy()
             y_true = y_batch.cpu().numpy()
         
         correct = (y_pred == y_true)
         acc = correct.mean()
         print('{}/{} ({:.2f}%)'.format(sum(correct),len(correct),acc * 100))
-        model.train()
         return acc
 
 
@@ -128,13 +121,19 @@ class Classifier(object):
 
                 scores = model(sequence_batch,seq_len)
                 loss = criterion(scores,y_batch)
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
                 
                 if (e * self.epochs + i) % eval_every == 0:
+
                     print('Train loss: {:.5f}'.format(loss.item()))
                     train_loss_history.append(loss.item())
                     print('Train accuracy:',end=' ')
-                    train_acc = self.check_accuracy(model,sequence_batch, seq_len, y_batch)
+                    train_acc = self.check_accuracy(scores, y_batch)
                     train_accuracy_history.append(train_acc)
+
                     if dev:
                         ds_dev, y_dev = dev
                         N_dev = len(ds_dev)
@@ -143,19 +142,21 @@ class Classifier(object):
                         sequence_dev_batch, seq_dev_len, y_dev_batch = next(batch_iter(ds_dev,y_dev,self.vocab,self.batch_size))
                         sequence_dev_batch = sequence_dev_batch.to(device=device)
                         y_dev_batch = y_dev_batch.to(device=device)
-                        scores = model(sequence_dev_batch,seq_dev_len)
-                        loss = criterion(scores,y_dev_batch)
-                        print('Dev loss: {:.5f}'.format(loss.item()))
-                        dev_loss_history.append(loss.item())
-                        print('Dev accuracy:',end=' ')
-                        dev_acc = self.check_accuracy(model,sequence_dev_batch, seq_dev_len, y_dev_batch)
-                        dev_accuracy_history.append(dev_acc)
+
+                        model.eval()
+                        with torch.no_grad():
+                            scores = model(sequence_dev_batch,seq_dev_len)
+                            loss = criterion(scores,y_dev_batch)
+                            print('Dev loss: {:.5f}'.format(loss.item()))
+                            dev_loss_history.append(loss.item())
+                            print('Dev accuracy:',end=' ')
+                            dev_acc = self.check_accuracy(scores, y_dev_batch)
+                            dev_accuracy_history.append(dev_acc)
+
+                        model.train()
+
                     print()
 
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-        
         model.eval()
         self.model = model
 
@@ -165,17 +166,23 @@ class Classifier(object):
                 'train_accuracy': train_accuracy_history,
                 'dev_loss': dev_loss_history,
                 'dev_accuracy': dev_accuracy_history,
+                'eval_every': eval_every,
+                'epochs': self.epochs,
+                'batch_size': self.batch_size
             }
         else:
             history = {
                 'train_loss': train_loss_history,
-                'train_accuracy': train_accuracy_history
+                'train_accuracy': train_accuracy_history,
+                'eval_every': eval_every,
+                'epochs': self.epochs,
+                'batch_size': self.batch_size
             }
         return history
             
 
 
-    def predict(self,ds):
+    def predict(self,ds,y):
         pattern = r'(\w+|[\.,!\(\)"\-:\?/%;¡\$\'¿\\]|\d+)'
         ds = self.normalize_dataset(ds)
         ds = ds.str.findall(pattern)
@@ -188,27 +195,26 @@ class Classifier(object):
         indices_batches = torch.arange(N).split(self.batch_size)
         y_pred_batches = []
         for indices in indices_batches:
-            sequence_batch = ds.iloc[indices].sort_values(key=lambda x: x.str.len(),ascending=False)
-            sent_lenghts = sequence_batch.str.len().tolist()
-            max_len = len(sequence_batch.iloc[0])
+            sequence_batch = ds.iloc[indices].reset_index(drop=True)
+            sent_lenghts = sequence_batch.str.len()
+            sorted_idx = sent_lenghts.argsort()[::-1]
+            resorted_idx = sorted_idx.argsort()
+            sorted_sequence_batch = sequence_batch.iloc[sorted_idx].reset_index(drop=True)
+            sorted_sent_lenghts = sent_lenghts.iloc[sorted_idx].tolist()
+            max_len = sorted_sent_lenghts[0]
             padded_sequences = [[vocab.get(tk,1) for tk in sent] + \
-                                [0] * (max_len-len(sent)) for sent in sequence_batch]
+                                [0] * (max_len-len(sent)) for sent in sorted_sequence_batch]
             padded_sequences = torch.LongTensor(padded_sequences).to(device=device)
 
             with torch.no_grad():
-                scores = model(padded_sequences,sent_lenghts)
-                y_pred = torch.argmax(scores,dim=1).cpu().numpy()
+                scores = model(padded_sequences,sorted_sent_lenghts)
+                y_pred = torch.argmax(scores,dim=1).cpu().numpy()[resorted_idx]
                 y_pred_batches.append(y_pred)
         
         y_pred = np.hstack(y_pred_batches)
+
         return y_pred
                 
-
-            
-
-
-
-
 
     def normalize_dataset(self,ds):
         # Pasamos a minúscula todo

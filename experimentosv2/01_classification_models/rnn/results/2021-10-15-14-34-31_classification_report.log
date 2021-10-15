@@ -1,0 +1,42 @@
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo recurrente vainilla con parámetros: freq_cutoff=5, max_words=10000, max_len=128, embedding_dim=300, hidden_size=200, num_layers=1,dropout=0., batch_size=128, learning_rate=1e-4, epochs=1
+
+
+Classification report (train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.77      0.40      0.52     91508
+           1       0.50      0.56      0.53     91533
+           2       0.46      0.54      0.50     91572
+           3       0.46      0.24      0.32     91564
+           4       0.53      0.88      0.66     91567
+
+    accuracy                           0.53    457744
+   macro avg       0.54      0.53      0.51    457744
+weighted avg       0.54      0.53      0.51    457744
+
+
+
+Classification report (dev):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.77      0.41      0.53       969
+           1       0.50      0.56      0.53       916
+           2       0.46      0.55      0.50       915
+           3       0.45      0.24      0.31       937
+           4       0.52      0.88      0.65       887
+
+    accuracy                           0.52      4624
+   macro avg       0.54      0.53      0.50      4624
+weighted avg       0.54      0.52      0.50      4624
+
+
+    
