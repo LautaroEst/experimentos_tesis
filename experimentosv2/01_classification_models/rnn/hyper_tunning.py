@@ -22,11 +22,28 @@ DATA_POR_PATH = DATA_PATH + 'por/'
 
 
 parser = argparse.ArgumentParser()
+
+# Argumentos para el entrenamiento:
 parser.add_argument('--nclasses', type=int, required=True)
 parser.add_argument('--lang', type=str, required=True)
 parser.add_argument('--devsize', type=float, required=True)
 parser.add_argument('--eval_every', type=int, required=True)
-parser.add_argument('--description', type=str, required=True)
+
+# Argumentos para el tokenizer:
+parser.add_argument('--pattern', type=str, required=True)
+parser.add_argument('--frequency_cutoff', type=int, required=True)
+parser.add_argument('--max_tokens', type=int, required=True)
+parser.add_argument('--max_sent_len', type=int, required=True)
+
+# Argumentos para el modelo:
+parser.add_argument('--embedding_dim', type=int, required=True)
+parser.add_argument('--hidden_size', type=int, required=True)
+parser.add_argument('--num_layers', type=int, required=True)
+parser.add_argument('--dropout', type=float, required=True)
+parser.add_argument('--batch_size', type=int, required=True)
+parser.add_argument('--learning_rate', type=float, required=True)
+parser.add_argument('--num_epochs', type=int, required=True)
+parser.add_argument('--device', type=str, required=True)
 
 
 def validate_args():
@@ -40,8 +57,10 @@ def validate_args():
 
     if args.lang == 'es':
         validated_args['data_path'] = DATA_ES_PATH
+        language = 'español'
     elif args.lang == 'pt':
         validated_args['data_path'] = DATA_POR_PATH
+        language = 'portugués'
     else:
         raise TypeError('Language must be es or pt')
 
@@ -55,9 +74,59 @@ def validate_args():
     else:
         validated_args['eval_every'] = args.eval_every
     
-    validated_args['description'] = args.description
+    description = """
 
-    return validated_args
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con red neuronal recurrente vainilla.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: {}
+- Idioma: {}
+- Proporción utilizada para dev: {}
+- Mostrar los datos cada {} batches.
+
+Argumentos del tokenizador:
+- Patrón para pretokenizar: {}
+- Frecuencia mínima: {}
+- Cantidad máxima de tokens en el vocabulario: {}
+- Cantidad máxima de tokens por review: {}
+
+Argumentos del modelo:
+- Dimensión de los embeddings: {}
+- Dimensión de las capas ocultas: {}
+- Cantidad de capas ocultas (recurrentes): {}
+- Probabilidad de dropout: {}
+- Tamaño del batch: {}
+- Tasa de aprendizaje: {}
+- Cantidad de epochs: {}
+- Dispositivo de entrenamiento: {}
+
+""".format(validated_args['nclasses'],language,validated_args['devsize'],
+    validated_args['eval_every'],args.pattern,args.frequency_cutoff,
+    args.max_tokens,args.max_sent_len,args.embedding_dim,args.hidden_size,
+    args.num_layers,args.dropout,args.batch_size,args.learning_rate,
+    args.num_epochs,args.device)
+
+    validated_args['description'] = description
+
+    model_args = {
+        'pattern': args.pattern,
+        'frequency_cutoff': args.frequency_cutoff,
+        'max_tokens': args. max_tokens,
+        'max_sent_len': args.max_sent_len,
+        'embedding_dim': args.embedding_dim,
+        'hidden_size': args.hidden_size,
+        'num_layers': args.num_layers,
+        'dropout': args.dropout,
+        'batch_size': args.batch_size,
+        'learning_rate': args.learning_rate,
+        'num_epochs': args.num_epochs,
+        'device': args.device
+    }
+
+    return validated_args, model_args
 
 
 def show_results(y_train_predict,y_train_true,y_dev_predict,y_dev_true,
@@ -68,12 +137,7 @@ def show_results(y_train_predict,y_train_true,y_dev_predict,y_dev_true,
 
     # Classification Report:
     report = """
-
-Descripción del experimento:
-----------------------------
-
 {}
-
 
 Classification report (train):
 ------------------------------
@@ -141,7 +205,7 @@ Classification report (dev):
     plt.savefig('results/{}_history.png'.format(title))
 
     
-def main(args):
+def main(args,model_args):
 
     # Data loading:
     data_path = args['data_path']
@@ -155,7 +219,7 @@ def main(args):
 
     # Model initialization:
     print('Initializing the model...')
-    model = Classifier(nclasses)
+    model = Classifier(nclasses,**model_args)
 
     # Model training:
     print('Training...')
@@ -171,9 +235,9 @@ def main(args):
 
     # Model evaluation:
     print('Evaluating results...')
-    y_train_predict = model.predict(df_train['review_content'],df_train['review_rate'].values)
+    y_train_predict = model.predict(df_train['review_content'])
     y_train_true = df_train['review_rate'].values
-    y_dev_predict = model.predict(df_dev['review_content'],df_dev['review_rate'].values)
+    y_dev_predict = model.predict(df_dev['review_content'])
     y_dev_true = df_dev['review_rate'].values
     show_results(y_train_predict,y_train_true,
                  y_dev_predict,y_dev_true,
@@ -181,8 +245,8 @@ def main(args):
 
     
 if __name__ == '__main__':
-    args = validate_args()
-    main(args)
+    args, model_args = validate_args()
+    main(args,model_args)
     
 
 

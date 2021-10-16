@@ -5,14 +5,18 @@ from sklearn.naive_bayes import MultinomialNB
 
 class Classifier(object):
 
-    def __init__(self):
-        self.vec = TfidfVectorizer(input='content', encoding='utf-8', 
-        decode_error='strict', strip_accents=None, lowercase=False, 
-        preprocessor=None, tokenizer=None, analyzer='word', 
-        stop_words=None, token_pattern=r'(\w+|[\.,!\(\)"\-:\?/%;¡\$\'¿\\]|\d+)', 
-        ngram_range=(1, 2), max_df=1.0, min_df=1, max_features=10000, 
-        vocabulary=None, binary=False, dtype=float, norm='l2', use_idf=True, 
-        smooth_idf=True, sublinear_tf=False)
+    def __init__(self,nclasses,pattern,ngram_range,min_df,max_tokens):
+        
+        self.nclasses = nclasses
+        self.vec = TfidfVectorizer(
+                            input='content', encoding='utf-8', 
+                            decode_error='strict', strip_accents=None, lowercase=False, 
+                            preprocessor=None, tokenizer=None, analyzer='word', 
+                            stop_words=None, token_pattern=pattern, 
+                            ngram_range=ngram_range, max_df=1.0, min_df=min_df, max_features=max_tokens, 
+                            vocabulary=None, binary=False, dtype=float, norm='l2', use_idf=True, 
+                            smooth_idf=True, sublinear_tf=False
+                    )
         
         self.clf = MultinomialNB(alpha=1.,fit_prior=True,class_prior=None)
 
