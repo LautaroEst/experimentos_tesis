@@ -7,3 +7,4 @@ __pycache__*
 *.tar.gz
 *.bin
 experimentos_old/*
+pretrained_models/*

@@ -1,0 +1,66 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con red neuronal recurrente vainilla.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 5
+- Idioma: español
+- Proporción utilizada para dev: 0.05
+- Mostrar los datos cada 100 batches.
+
+Argumentos del tokenizador:
+- Patrón para pretokenizar: (\w+|[\.,!\(\)"\-:\?/%;¡\$'¿\\]|\d+)
+- Frecuencia mínima: 5
+- Cantidad máxima de tokens en el vocabulario: 10000
+- Cantidad máxima de tokens por review: 128
+
+Argumentos del modelo:
+- Dimensión de los embeddings: 300
+- Dimensión de las capas ocultas: 200
+- Cantidad de capas ocultas (recurrentes): 1
+- Probabilidad de dropout: 0.0
+- Tamaño del batch: 128
+- Tasa de aprendizaje: 0.0001
+- Cantidad de epochs: 1
+- Dispositivo de entrenamiento: cuda:1
+
+
+
+Classification report (train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.71      0.50      0.59     87782
+           1       0.49      0.56      0.52     87875
+           2       0.45      0.52      0.49     87921
+           3       0.45      0.41      0.43     87694
+           4       0.63      0.69      0.66     87977
+
+    accuracy                           0.54    439249
+   macro avg       0.55      0.54      0.54    439249
+weighted avg       0.55      0.54      0.54    439249
+
+
+
+Classification report (dev):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.71      0.49      0.58      4695
+           1       0.47      0.54      0.51      4574
+           2       0.45      0.53      0.48      4566
+           3       0.47      0.42      0.45      4807
+           4       0.62      0.69      0.66      4477
+
+    accuracy                           0.53     23119
+   macro avg       0.55      0.53      0.53     23119
+weighted avg       0.55      0.53      0.53     23119
+
+
+    
