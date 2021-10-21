@@ -60,8 +60,8 @@ class RNNModel(nn.Module):
     def __init__(self,embedding_dim,num_embeddings,hidden_size,num_outs,num_layers,dropout):
         super().__init__()
         self.emb = nn.Embedding(num_embeddings,embedding_dim,padding_idx=0)
-        self.rnn = nn.RNN(input_size=embedding_dim,hidden_size=hidden_size,
-                   num_layers=num_layers,nonlinearity='relu',bias=True,
+        self.rnn = nn.GRU(input_size=embedding_dim,hidden_size=hidden_size,
+                   num_layers=num_layers,bias=True,
                    batch_first=True,dropout=dropout,bidirectional=False)
         self.linear_out = nn.Linear(hidden_size,num_outs)
         

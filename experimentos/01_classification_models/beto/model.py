@@ -1,5 +1,6 @@
 from collections import defaultdict
 import json
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -18,7 +19,7 @@ def batch_iter(input_ids,token_type_ids,attention_mask,labels,batch_size,pad_idx
     else:
         indices_batches = torch.arange(N).split(batch_size)
 
-    for indices in indices_batches:
+    for indices in tqdm(indices_batches):
         input_ids_batch = input_ids.iloc[indices].reset_index(drop=True)
         token_type_ids_batch = token_type_ids.iloc[indices].reset_index(drop=True)
         attention_mask_batch = attention_mask.iloc[indices].reset_index(drop=True)
@@ -34,7 +35,7 @@ def batch_iter(input_ids,token_type_ids,attention_mask,labels,batch_size,pad_idx
         input_ids_batch_padded = torch.LongTensor(input_ids_batch)
         token_type_ids_batch_padded = torch.LongTensor(token_type_ids_batch)
         attention_mask_batch_padded = torch.LongTensor(attention_mask_batch)
-        labels_batch = torch.LongTensor(labels_batch)
+        labels_batch = torch.from_numpy(labels_batch).long()
         yield (input_ids_batch_padded, token_type_ids_batch_padded, 
             attention_mask_batch_padded, labels_batch)
 
@@ -121,19 +122,24 @@ class Classifier(object):
             dev_loss_history = []
             dev_accuracy_history = []
         
+        num_batches = len(torch.arange(len(input_ids)).split(self.batch_size))
         for e in range(self.epochs):
             print('Epoch {}/{}'.format(e+1,self.epochs))
-            for i, batch in enumerate(batch_iter(input_ids,
-                                                token_type_ids,
-                                                attention_mask,
-                                                y,self.batch_size,pad_idx)):
+            for i, batch in enumerate(batch_iter(
+                                            input_ids,
+                                            token_type_ids,
+                                            attention_mask,
+                                            y,
+                                            self.batch_size,
+                                            pad_idx
+                                        )):
                 
                 input_ids_batch, token_type_ids_batch, attention_mask_batch, labels_batch = (x.to(device=device) for x in batch)
                 
                 scores = model(input_ids=input_ids_batch,
                             attention_mask=attention_mask_batch,
                             token_type_ids=token_type_ids_batch,
-                            labels=y,
+                            labels=labels_batch,
                             output_hidden_states=False,
                             output_attentions=False,
                             return_dict=True)
@@ -145,6 +151,7 @@ class Classifier(object):
                 
                 if (e * self.epochs + i) % eval_every == 0:
 
+                    print('Batch {}/{}. Epoch {}/{}'.format(i,num_batches,e+1,self.epochs))
                     print('Train loss: {:.5f}'.format(loss.item()))
                     train_loss_history.append(loss.item())
                     print('Train accuracy:',end=' ')
@@ -229,8 +236,9 @@ class Classifier(object):
         model = self.model
         model.eval()
 
+        num_batches = len(torch.arange(len(input_ids)).split(self.batch_size))
         y_pred_batches = []
-        for batch in batch_iter(input_ids,token_type_ids,attention_mask,labels,self.batch_size,pad_idx,shuffle=False):
+        for batch in tqdm(batch_iter(input_ids,token_type_ids,attention_mask,labels,self.batch_size,pad_idx,shuffle=False),total=num_batches):
             input_ids_batch, token_type_ids_batch, attention_mask_batch, y_batch = (x.to(device=device) for x in batch)
             
             with torch.no_grad():

@@ -7,6 +7,17 @@ import torch.optim as optim
 import numpy as np
 import pandas as pd
 
+from gensim.models.keyedvectors import KeyedVectors
+
+import os
+EMBEDDINGS_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/pretrained_models/'
+embeddings_file_paths = {
+    'fasttext': EMBEDDINGS_PATH + 'fasttext-sbwc.vec',
+    'glove': EMBEDDINGS_PATH + 'glove-sbwc.i25.vec',
+    'word2vec': EMBEDDINGS_PATH + 'SBW-vectors-300-min5.txt'
+}
+
+
 class VocabVectorizer(object):
 
     def __init__(self,pattern,freq_cutoff,max_words,max_sent_len,
@@ -60,8 +71,8 @@ class RNNModel(nn.Module):
     def __init__(self,embedding_dim,num_embeddings,hidden_size,num_outs,num_layers,dropout):
         super().__init__()
         self.emb = nn.Embedding(num_embeddings,embedding_dim,padding_idx=0)
-        self.rnn = nn.RNN(input_size=embedding_dim,hidden_size=hidden_size,
-                   num_layers=num_layers,nonlinearity='relu',bias=True,
+        self.rnn = nn.GRU(input_size=embedding_dim,hidden_size=hidden_size,
+                   num_layers=num_layers,bias=True,
                    batch_first=True,dropout=dropout,bidirectional=False)
         self.linear_out = nn.Linear(hidden_size,num_outs)
         
@@ -72,7 +83,73 @@ class RNNModel(nn.Module):
         scores = self.linear_out(hidden.transpose(0,1)[:,-1,:])
         #out = pad_packed_sequence(out,batch_first=True,padding_value=0)
         return scores
+
+
+def load_fasttext(emb_layer,idx2tk,wordvectors,embedding_dim,min_subword,max_subword):
+
+    def window_gen(word,min_len,max_len):
+        return (word[i-n:i] for n in range(min_len,max_len+1) for i in range(n,len(word)+1))
+
+    with torch.no_grad():
+        for idx, tk in idx2tk.items():
+            try:
+                emb_layer.weight[idx,:] = torch.from_numpy(wordvectors[tk].copy()).float()
+            except KeyError:
+                v = np.zeros(embedding_dim,dtype=float)
+                for w in window_gen(tk,min_subword,max_subword):
+                    try:
+                        v += wordvectors[w].copy()
+                    except KeyError:
+                        v += np.random.randn(embedding_dim)
+                emb_layer.weight[idx,:] = torch.from_numpy(v).float()
+    
+    return emb_layer
+
+
+def load_glove_word2vec(embedding_layer,idx2tk,wordvectors,embedding_dim):
+    
+    with torch.no_grad():
+        for idx, tk in idx2tk.items():
+            try:
+                embedding_layer.weight[idx,:] = torch.from_numpy(wordvectors[tk].copy()).float()
+            except KeyError:
+                embedding_layer.weight[idx,:] = torch.randn(embedding_dim)
+    
+    return embedding_layer
         
+
+def init_model(vocab,embeddings,hidden_size,nclasses,num_layers,dropout):
+    
+    embedding_dim = 300
+    model = RNNModel(embedding_dim,len(vocab),hidden_size,
+                    nclasses,num_layers,dropout)
+    
+    idx2tk = {idx:tk for tk, idx in vocab.items()}
+    idx2tk.pop(0)
+    idx2tk.pop(1)
+
+    wordvectors_file_vec = embeddings_file_paths[embeddings]
+
+    if embeddings == 'fasttext':
+        cantidad = 855380
+        print('Loading {} pretrained word embeddings...'.format(cantidad))
+        wordvectors = KeyedVectors.load_word2vec_format(wordvectors_file_vec, limit=cantidad)
+        min_subword = 3
+        max_subword = 6
+        model.emb = load_fasttext(model.emb,idx2tk,wordvectors,embedding_dim,min_subword,max_subword)
+    elif embeddings == 'glove':
+        cantidad = 855380
+        print('Loading {} pretrained word embeddings...'.format(cantidad))
+        wordvectors = KeyedVectors.load_word2vec_format(wordvectors_file_vec, limit=cantidad)
+        model.emb = load_glove_word2vec(model.emb,idx2tk,wordvectors,embedding_dim)
+    elif embeddings == 'word2vec':
+        cantidad = 1000653
+        print('Loading {} pretrained word embeddings...'.format(cantidad))
+        wordvectors = KeyedVectors.load_word2vec_format(wordvectors_file_vec, limit=cantidad)
+        model.emb = load_glove_word2vec(model.emb,idx2tk,wordvectors,embedding_dim)
+
+    return model
+    
 
         
 def batch_iter(ds,y,batch_size,pad_idx):
@@ -96,10 +173,10 @@ def batch_iter(ds,y,batch_size,pad_idx):
 class Classifier(object):
 
     def __init__(self,nclasses,pattern,frequency_cutoff,max_tokens,max_sent_len,
-                embedding_dim,hidden_size,num_layers,dropout,batch_size,
+                embeddings,hidden_size,num_layers,dropout,batch_size,
                 learning_rate,num_epochs,device):
 
-        self.embedding_dim = embedding_dim
+        self.embeddings = embeddings
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.dropout = dropout
@@ -108,7 +185,7 @@ class Classifier(object):
         self.epochs = num_epochs
         self.nclasses = nclasses
         self.device_type = device
-
+        
         self.vec = VocabVectorizer(pattern,frequency_cutoff,
                         max_tokens,max_sent_len,'<pad>','<unk>')
 
@@ -135,8 +212,8 @@ class Classifier(object):
             dev = (ds_dev,dev[1])
 
         device = torch.device(self.device_type)    
-        model = RNNModel(self.embedding_dim,len(self.vec.vocab),
-                self.hidden_size,self.nclasses,self.num_layers,self.dropout)
+        model = init_model(self.vec.vocab,self.embeddings,self.hidden_size,
+                            self.nclasses,self.num_layers,self.dropout)
         model.to(device)
         model.train()
 
@@ -149,9 +226,8 @@ class Classifier(object):
             dev_loss_history = []
             dev_accuracy_history = []
         
-        num_batches = len(torch.arange(len(ds)).split(self.batch_size))
         for e in range(self.epochs):
-
+            print('Epoch {}/{}'.format(e+1,self.epochs))
             for i, (sequence_batch, seq_len, y_batch) in enumerate(batch_iter(ds,y,self.batch_size,pad_idx)):
                 sequence_batch = sequence_batch.to(device=device)
                 y_batch = y_batch.to(device=device)
@@ -165,7 +241,6 @@ class Classifier(object):
                 
                 if (e * self.epochs + i) % eval_every == 0:
 
-                    print('Batch {}/{}. Epoch {}/{}'.format(i,num_batches,e+1,self.epochs))
                     print('Train loss: {:.5f}'.format(loss.item()))
                     train_loss_history.append(loss.item())
                     print('Train accuracy:',end=' ')
@@ -256,8 +331,15 @@ class Classifier(object):
         # Pasamos a minúscula todo
         ds = ds.str.lower()
         # Sacamos todos los acentos
-        for rep, rep_with in [('[óòÓöøôõ]','o'), ('[áàÁäåâãÄ]','a'), ('[íìÍïîÏ]','i'), 
-                            ('[éèÉëêÈ]','e'), ('[úüÚùûÜ]','u'), ('[ç¢Ç]','c'), 
-                            ('[ý¥]','y'),('š','s'),('ß','b'),('\x08','')]:
+        for rep, rep_with in [('[óòÓöøôõ]','ó'), 
+                              ('[áàÁäåâãÄ]','á'), 
+                              ('[íìÍïîÏ]','í'), 
+                              ('[éèÉëêÈ]','é'), 
+                              ('[úÚùû]','ú'),
+                              ('[ç¢Ç]','c'), 
+                              ('[ý¥]','y'),
+                              ('š','s'),
+                              ('ß','b'),
+                              ('\x08','')]:
             ds  = ds.str.replace(rep,rep_with,regex=True)
         return ds
