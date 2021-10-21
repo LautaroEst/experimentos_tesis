@@ -81,12 +81,13 @@ import argparse
 import re
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--pattern', type=str, required=True)
+#parser.add_argument('--pattern', type=str, required=True)
+parser.add_argument('--cased', action='store_true', required=False, default=False)
 
 
 if __name__ == '__main__':
-    main()
-    # args = parser.parse_args()
+    #main()
+    args = parser.parse_args()
     # pattern = """(\\w+|[\\.,!\\(\\)"\\-:\\?/%;¡\\$'¿\\\\]|\\d+)"""
     # pattern = r"(\w+|[\.,!\(\)\"\-:\?/%;¡\$'¿\\]|\d+)"
     # #re.compile(pattern)
@@ -94,3 +95,4 @@ if __name__ == '__main__':
     # print(pattern == args.pattern)
     # print(pattern)
     # print(args.pattern)
+    print(args.cased)
