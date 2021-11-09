@@ -1,0 +1,58 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con red neuronal recurrente vainilla.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 5
+- Idioma: español
+- Proporción utilizada para dev: 0.05
+- Mostrar los datos cada 100 batches.
+
+Argumentos del modelo:
+- Cased: True
+- Probabilidad de dropout: 0.0
+- Tamaño del batch: 8
+- Tasa de aprendizaje: 5e-05
+- Cantidad de epochs: 2
+- Dispositivo de entrenamiento: cuda:1
+
+
+
+Classification report (train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.69      0.72      0.71     19176
+           1       0.55      0.34      0.42     18906
+           2       0.51      0.44      0.47     19050
+           3       0.53      0.69      0.60     18923
+           4       0.71      0.83      0.77     18945
+
+    accuracy                           0.61     95000
+   macro avg       0.60      0.60      0.59     95000
+weighted avg       0.60      0.61      0.59     95000
+
+
+
+Classification report (dev):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.65      0.69      0.67       966
+           1       0.48      0.29      0.36       970
+           2       0.48      0.40      0.43      1044
+           3       0.47      0.64      0.54       995
+           4       0.66      0.76      0.71      1025
+
+    accuracy                           0.55      5000
+   macro avg       0.55      0.55      0.54      5000
+weighted avg       0.55      0.55      0.54      5000
+
+
+    
