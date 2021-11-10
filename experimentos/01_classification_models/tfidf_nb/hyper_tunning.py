@@ -33,7 +33,7 @@ parser.add_argument('--pattern', type=str, required=True)
 parser.add_argument('--min_ngram', type=int, required=True)
 parser.add_argument('--max_ngram', type=int, required=True)
 parser.add_argument('--min_df', type=int, required=True)
-parser.add_argument('--max_tokens', type=int, required=True)
+parser.add_argument('--max_features', type=int, required=True)
 
 
 def validate_args():
@@ -80,10 +80,10 @@ Argumentos del tokenizador:
 - Patrón para tokenizar: {}
 - Frecuencia de documento mínima: {}
 - Rango de los n-gramas: {}
-- Cantidad máxima de tokens en el vocabulario: {}
+- Cantidad máxima de features en el vocabulario: {}
 
 """.format(validated_args['nclasses'],language,validated_args['devsize'],
-    args.pattern,args.min_df,ngram_range,args.max_tokens)
+    args.pattern,args.min_df,ngram_range,args.max_features)
 
     validated_args['description'] = description
 
@@ -91,7 +91,7 @@ Argumentos del tokenizador:
         'pattern': args.pattern,
         'min_df': args.min_df,
         'ngram_range': ngram_range,
-        'max_tokens': args.max_tokens
+        'max_features': args.max_features
     }
 
     return validated_args, model_args

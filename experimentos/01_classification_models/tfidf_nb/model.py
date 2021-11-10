@@ -5,7 +5,7 @@ from sklearn.naive_bayes import MultinomialNB
 
 class Classifier(object):
 
-    def __init__(self,nclasses,pattern,ngram_range,min_df,max_tokens):
+    def __init__(self,nclasses,pattern,ngram_range,min_df,max_features):
         
         self.nclasses = nclasses
         self.vec = TfidfVectorizer(
@@ -13,7 +13,7 @@ class Classifier(object):
                             decode_error='strict', strip_accents=None, lowercase=False, 
                             preprocessor=None, tokenizer=None, analyzer='word', 
                             stop_words=None, token_pattern=pattern, 
-                            ngram_range=ngram_range, max_df=1.0, min_df=min_df, max_features=max_tokens, 
+                            ngram_range=ngram_range, max_df=1.0, min_df=min_df, max_features=max_features, 
                             vocabulary=None, binary=False, dtype=float, norm='l2', use_idf=True, 
                             smooth_idf=True, sublinear_tf=False
                     )
