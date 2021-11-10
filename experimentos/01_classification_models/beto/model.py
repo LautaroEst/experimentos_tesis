@@ -35,7 +35,7 @@ def batch_iter(input_ids,token_type_ids,attention_mask,labels,batch_size,pad_idx
         input_ids_batch_padded = torch.LongTensor(input_ids_batch)
         token_type_ids_batch_padded = torch.LongTensor(token_type_ids_batch)
         attention_mask_batch_padded = torch.LongTensor(attention_mask_batch)
-        labels_batch = torch.from_numpy(labels_batch).long()
+        labels_batch = torch.from_numpy(np.asarray(labels_batch)).long()
         yield (input_ids_batch_padded, token_type_ids_batch_padded, 
             attention_mask_batch_padded, labels_batch)
 

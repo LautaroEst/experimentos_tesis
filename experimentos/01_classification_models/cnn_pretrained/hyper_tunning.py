@@ -20,8 +20,13 @@ DATA_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/datav2/'
 DATA_ES_PATH = DATA_PATH + 'esp/'
 DATA_POR_PATH = DATA_PATH + 'por/'
 
-MODEL_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/pretrained_models/'
-
+EMBEDDINGS_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/pretrained_models/'
+embeddings_file_paths = {
+    # https://github.com/dccuchile/spanish-word-embeddings#fasttext-embeddings-from-sbwc
+    'fasttext': EMBEDDINGS_PATH + 'fasttext-sbwc.vec',
+    'glove': EMBEDDINGS_PATH + 'glove-sbwc.i25.vec',
+    'word2vec': EMBEDDINGS_PATH + 'SBW-vectors-300-min5.txt'
+}
 
 parser = argparse.ArgumentParser()
 
@@ -31,8 +36,16 @@ parser.add_argument('--lang', type=str, required=True)
 parser.add_argument('--devsize', type=float, required=True)
 parser.add_argument('--eval_every', type=int, required=True)
 
+# Argumentos para el tokenizer:
+parser.add_argument('--pattern', type=str, required=True)
+parser.add_argument('--frequency_cutoff', type=int, required=True)
+parser.add_argument('--max_tokens', type=int, required=True)
+parser.add_argument('--max_sent_len', type=int, required=True)
+
 # Argumentos para el modelo:
-parser.add_argument('--cased', action='store_true', required=False, default=False)
+parser.add_argument('--embeddings', type=str, required=True)
+parser.add_argument('--filter_sizes', type=str, required=True)
+parser.add_argument('--n_filters', type=int, required=True)
 parser.add_argument('--dropout', type=float, required=True)
 parser.add_argument('--batch_size', type=int, required=True)
 parser.add_argument('--learning_rate', type=float, required=True)
@@ -67,18 +80,19 @@ def validate_args():
         raise TypeError('eval_every must be greater than 0.')
     else:
         validated_args['eval_every'] = args.eval_every
-    
-    if args.cased:
-        model_path = MODEL_PATH + 'beto_cased/'
+
+    if args.embeddings not in embeddings_file_paths.keys():
+        raise TypeError('embeddings not supported')
     else:
-        model_path = MODEL_PATH + 'beto_uncased/'
+        embeddings = args.embeddings
 
     description = """
 
 Descripción del experimento:
 ----------------------------
 
-Modelo de clasificación con red neuronal recurrente vainilla.
+Modelo de clasificación con red neuronal convolucional en una dimensión. 
+El entrenamiento se hace end-to-end.
 
 Argumentos del entrenamiento utilizados:
 - Cantidad de clases: {}
@@ -86,8 +100,16 @@ Argumentos del entrenamiento utilizados:
 - Proporción utilizada para dev: {}
 - Mostrar los datos cada {} batches.
 
+Argumentos del tokenizador:
+- Patrón para pretokenizar: {}
+- Frecuencia mínima: {}
+- Cantidad máxima de tokens en el vocabulario: {}
+- Cantidad máxima de tokens por review: {}
+
 Argumentos del modelo:
-- Cased: {}
+- Embeddings utilizados: {}
+- Tamaño de los filtros: {}
+- Cantidad de canales por filtro: {}
 - Probabilidad de dropout: {}
 - Tamaño del batch: {}
 - Tasa de aprendizaje: {}
@@ -95,14 +117,21 @@ Argumentos del modelo:
 - Dispositivo de entrenamiento: {}
 
 """.format(validated_args['nclasses'],language,validated_args['devsize'],
-    validated_args['eval_every'],args.cased,args.dropout,args.batch_size,
-    args.learning_rate,args.num_epochs,args.device)
+    validated_args['eval_every'],args.pattern,args.frequency_cutoff,
+    args.max_tokens,args.max_sent_len,embeddings,args.filter_sizes,
+    args.n_filters,args.dropout,args.batch_size,args.learning_rate,
+    args.num_epochs,args.device)
 
     validated_args['description'] = description
 
     model_args = {
-        'model_path': model_path,
-        'cased': args.cased,
+        'pattern': args.pattern,
+        'frequency_cutoff': args.frequency_cutoff,
+        'max_tokens': args. max_tokens,
+        'max_sent_len': args.max_sent_len,
+        'embeddings': embeddings,
+        'filter_sizes': [int(fs) for fs in args.filter_sizes.split(',')],
+        'n_filters': args.n_filters,
         'dropout': args.dropout,
         'batch_size': args.batch_size,
         'learning_rate': args.learning_rate,
@@ -135,15 +164,15 @@ Classification report (dev):
 {}
 
     """.format(description,
-               classification_report(y_train_true,y_train_predict,labels=list(range(nclasses))),
-               classification_report(y_dev_true,y_dev_predict,labels=list(range(nclasses))))
+               classification_report(y_train_true,y_train_predict),
+               classification_report(y_dev_true,y_dev_predict))
 
     with open('results/{}_classification_report.log'.format(title),'w') as f:
         f.write(report)
 
     # Confusion Matrix:
-    cm_train = confusion_matrix(y_train_true,y_train_predict,labels=list(range(nclasses)))
-    cm_dev = confusion_matrix(y_dev_true,y_dev_predict,labels=list(range(nclasses)))
+    cm_train = confusion_matrix(y_train_true,y_train_predict)
+    cm_dev = confusion_matrix(y_dev_true,y_dev_predict)
 
     fig, (ax1, ax2) = plt.subplots(1,2,figsize=(10,6))
     im = ax1.imshow(cm_train,cmap='cividis')
@@ -198,7 +227,7 @@ def main(args,model_args):
     eval_every = args['eval_every']
     description = args['description']
     print('Loading train data...')
-    df = utils.load_data(data_path,'train',nclasses)#.sample(n=100000).reset_index(drop=True)
+    df = utils.load_data(data_path,'train',nclasses)
     df_train, df_dev = utils.train_dev_split(df,dev_size=dev_size,random_state=RANDOM_SEED)
 
     # Model initialization:
