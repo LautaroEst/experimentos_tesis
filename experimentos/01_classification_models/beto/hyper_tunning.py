@@ -198,7 +198,7 @@ def main(args,model_args):
     eval_every = args['eval_every']
     description = args['description']
     print('Loading train data...')
-    df = utils.load_data(data_path,'train',nclasses)#.sample(n=100000).reset_index(drop=True)
+    df = utils.load_data(data_path,'train',nclasses)#.sample(n=100).reset_index(drop=True)
     df_train, df_dev = utils.train_dev_split(df,dev_size=dev_size,random_state=RANDOM_SEED)
 
     # Model initialization:

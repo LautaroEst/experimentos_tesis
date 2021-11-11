@@ -1,0 +1,49 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con un modelo TfIdf + Naive Bayes.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 2
+- Idioma: español
+- Proporción utilizada para dev: 0.05
+
+Argumentos del tokenizador:
+- Patrón para tokenizar: (\w+|[!?\.,])
+- Frecuencia de documento mínima: 1
+- Rango de los n-gramas: (1, 3)
+- Cantidad máxima de features en el vocabulario: 100000
+
+
+
+Classification report (train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.95      0.89      0.92    175672
+           1       0.89      0.95      0.92    175714
+
+    accuracy                           0.92    351386
+   macro avg       0.92      0.92      0.92    351386
+weighted avg       0.92      0.92      0.92    351386
+
+
+
+Classification report (dev):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.94      0.87      0.90      9254
+           1       0.88      0.94      0.91      9241
+
+    accuracy                           0.91     18495
+   macro avg       0.91      0.91      0.91     18495
+weighted avg       0.91      0.91      0.91     18495
+
+
+    

@@ -180,8 +180,8 @@ class Classifier(object):
                         with torch.no_grad():
                             scores = model(
                                 input_ids=input_ids_dev,
-                                attention_mask=token_type_ids_dev,
-                                token_type_ids=attention_mask_dev,
+                                attention_mask=attention_mask_dev,
+                                token_type_ids=token_type_ids_dev,
                                 labels=y_dev,
                                 output_hidden_states=False,
                                 output_attentions=False,
@@ -239,14 +239,13 @@ class Classifier(object):
         num_batches = len(torch.arange(len(input_ids)).split(self.batch_size))
         y_pred_batches = []
         for batch in tqdm(batch_iter(input_ids,token_type_ids,attention_mask,labels,self.batch_size,pad_idx,shuffle=False),total=num_batches):
-            input_ids_batch, token_type_ids_batch, attention_mask_batch, y_batch = (x.to(device=device) for x in batch)
+            input_ids_batch, token_type_ids_batch, attention_mask_batch, _ = (x.to(device=device) for x in batch)
             
             with torch.no_grad():
                 scores = model(
                     input_ids=input_ids_batch,
-                    attention_mask=token_type_ids_batch,
-                    token_type_ids=attention_mask_batch,
-                    labels=y_batch,
+                    attention_mask=attention_mask_batch,
+                    token_type_ids=token_type_ids_batch,
                     output_hidden_states=False,
                     output_attentions=False,
                     return_dict=True
