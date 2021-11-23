@@ -1,4 +1,4 @@
-# Expermiento `run_models`
+# Expermiento `classification_models`
 
 En este experimento se van a diseñar algunos modelos de clasificación de sentimientos sobre el dataset MeLiSA y se van a dar sus resultados para train y test.
 
@@ -20,7 +20,7 @@ Los resultados para 2 clases se encuentran [acá](./tfidf_nb/results_2classes/20
 
 2. `CatVectorizer+2LayerNet`: Modelo basado en extracción de features con un clasificador Softmax de dos capas. Se implementa una tokenización basada en expresiones regulares, una normalización estándar y una bolsa de palabras por conteo de categoría con un máximo de 10000 palabras. Luego se implementa una clasificación con una red neuronal de 2 capas.
 
-## Modelos basados en Redes Neuronales y Word Embeddings
+## Modelos basados en Redes Neuronales
 
 Acá se presentan 3 modelos neuronales end-to-end (uno Feed Forward, uno recurrente y uno convolucional), los cuales serán entrenados de diferentes maneras. Primero, se implementarán sin ningún tipo de información adicional (sin vectores preentrenados). Luego se incorporarán vectores word2vec y glove y se probará entrenar cada modelo haciendo ajuste fino de toda la red (primero) y de todo lo que no es el layer de embedding (después). Finalmente se utilizarán vectores FastText como entrada de los tres modelos, y ya que estos vectores están fijos, los parámetros se entrenan en todas las capas posteriores a las de embeddings.
 
