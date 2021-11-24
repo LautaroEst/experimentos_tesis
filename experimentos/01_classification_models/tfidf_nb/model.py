@@ -5,16 +5,18 @@ from sklearn.naive_bayes import MultinomialNB
 
 class Classifier(object):
 
-    def __init__(self,nclasses,pattern,ngram_range,min_df,max_features):
+    pattern = r"(\w+|[\.,!\(\)\"\-:\?/%;¡\$'¿\\]|\d+)"
+
+    def __init__(self,nclasses,ngram_range,max_features):
         
         self.nclasses = nclasses
         self.vec = TfidfVectorizer(
                             input='content', encoding='utf-8', 
                             decode_error='strict', strip_accents=None, lowercase=False, 
                             preprocessor=None, tokenizer=None, analyzer='word', 
-                            stop_words=None, token_pattern=pattern, 
-                            ngram_range=ngram_range, max_df=1.0, min_df=min_df, max_features=max_features, 
-                            vocabulary=None, binary=False, dtype=float, norm='l2', use_idf=True, 
+                            stop_words=None, token_pattern=self.pattern, 
+                            ngram_range=ngram_range, max_df=1.0, min_df=1, max_features=max_features, 
+                            vocabulary=None, binary=False, norm='l2', use_idf=True, 
                             smooth_idf=True, sublinear_tf=False
                     )
         
@@ -33,11 +35,15 @@ class Classifier(object):
         return y_predict
 
     def normalize_dataset(self,ds):
-        # Pasamos a minúscula todo
-        ds = ds.str.lower()
-        # Sacamos todos los acentos
-        for rep, rep_with in [('[óòÓöøôõ]','o'), ('[áàÁäåâãÄ]','a'), ('[íìÍïîÏ]','i'), 
-                            ('[éèÉëêÈ]','e'), ('[úüÚùûÜ]','u'), ('[ç¢Ç]','c'), 
-                            ('[ý¥]','y'),('š','s'),('ß','b'),('\x08','')]:
+
+        accents = [
+            ('[óòöøôõ]','ó'), ('[áàäåâã]','á'), ('[íìïî]','í'), ('[éèëê]','é'), ('[úùû]','ú'), ('[ç¢]','c'), 
+            ('[ÓÒÖØÔÕ]','Ó'), ('[ÁÀÄÅÂÃ]','Á'), ('[ÍÌÏÎ]','Í'), ('[ÉÈËÊ]','É'), ('[ÚÙÛ]','Ù'), ('Ç','C'),
+            ('[ý¥]','y'), ('š','s'), ('ß','b'), ('\x08','')
+        ]
+        for rep, rep_with in accents:
             ds  = ds.str.replace(rep,rep_with,regex=True)
+
+        ds = ds.str.lower()
+
         return ds
