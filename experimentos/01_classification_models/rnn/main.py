@@ -8,7 +8,7 @@ def load_and_split(lang,nclasses,devsize):
             lang=lang,
             split='train',
             nclasses=nclasses
-        )
+        )#.iloc[:1000,:].reset_index(drop=True)
     df_train, df_dev = train_dev_split(df,devsize,RANDOM_SEED)
     return df_train, df_dev
 
@@ -18,18 +18,22 @@ def make_description(args,is_dev):
 Descripción del experimento:
 ----------------------------
 
-Modelo de clasificación con un modelo Bolsa de Features (catgorías) + 2LayerNet.
+Modelo de clasificación con una red neuronal recurrente {rnn}.
 
 Argumentos del entrenamiento utilizados:
 - Cantidad de clases: {nclasses}
 - Idioma: {lang}
-- Rango de los n-gramas: {ngram_range}
-- Cantidad máxima de features en el vocabulario: {max_features}
-- Dimensión de la capa oculta: {hidden_size}
+- Cantidad máxima de palabras en el vocabulario: {max_tokens}
+- Frecuencia mínima de cada palabra: {frequency_cutoff}
+- Cantidad máxima de tokens por review: {max_sent_len}
+- Dimensión de los embeddings: {embedding_dim}
+- Red bidireccional: {bidirectional}
+- Dimensión de las capas ocultas: {hidden_size}
+- Cantidad de capas ocultas (recurrentes): {num_layers}
+- Probabilidad de dropout: {dropout}
 - Tamaño del batch: {batch_size}
 - Tasa de aprendizaje: {learning_rate}
 - Cantidad de epochs: {num_epochs}
-- Weight Decay: {weight_decay}
 - Dispositivo de entrenamiento: {device}
 - Mostrar los datos cada {eval_every} batches.
 """.format(**args)
@@ -59,11 +63,16 @@ def main():
                             devsize=devsize
                         )
     else:
+        df_train = load_data(
+            lang=lang,
+            split='train',
+            nclasses=nclasses
+        )#.iloc[:1000,:].reset_index(drop=True)
         df_dev_test = load_data(
             lang=lang,
             split='test',
             nclasses=nclasses
-        )
+        )#.iloc[:1000,:].reset_index(drop=True)
 
     # Model initialization:
     print('Initializing the model...')

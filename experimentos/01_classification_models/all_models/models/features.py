@@ -1,45 +1,10 @@
-from sklearn.feature_extraction.text import CountVectorizer
+from .utils import normalize_dataset, CatBOWVectorizer
 
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 import torch.optim as optim
 import numpy as np
-import pandas as pd
-
-
-class CatBOWVectorizer(object):
-
-    pattern = r"(\w+|[\.,!\(\)\"\-:\?/%;¡\$'¿\\]|\d+)"
-
-    def __init__(self,nclasses,ngram_range,max_features):
-        self.vec = CountVectorizer(token_pattern=self.pattern,
-                ngram_range=ngram_range,max_features=max_features)
-        self.labels_names = list(range(nclasses))
-    
-    def _vectorizer_by_cat(self,X,labels):
-        n_cats = len(self.labels_names)
-        word_vecs = np.zeros((X.shape[1],n_cats),dtype=float)
-        for i,n in enumerate(self.labels_names):
-                word_vecs[:,i] = X[labels == n,:].sum(axis=0)
-        X_cats = X @ word_vecs
-        self.learned_words = word_vecs
-        return X_cats
-
-    def fit_transform(self,corpus,labels):
-        X = self.vec.fit_transform(corpus)
-        X_cats = self._vectorizer_by_cat(X,labels)
-        self.learned_mean = X_cats.mean(axis=0,keepdims=True)
-        X_cats = X_cats - self.learned_mean
-        X_cats /= np.linalg.norm(X_cats,axis=1,keepdims=True)
-        return X_cats
-    
-    def transform(self,corpus):
-        X = self.vec.transform(corpus)
-        X_cats = X @ self.learned_words
-        X_cats = X_cats - self.learned_mean
-        X_cats /= np.linalg.norm(X_cats,axis=1,keepdims=True)
-        return X_cats
 
 
 class TwoLayerNet(nn.Module):
@@ -54,7 +19,7 @@ class TwoLayerNet(nn.Module):
         return log_probs
 
 
-class Classifier(object):
+class FeaturesClassifier(object):
 
     def __init__(self,nclasses,ngram_range,max_features,
                 hidden_size,num_epochs,batch_size,learning_rate,weight_decay,
@@ -82,7 +47,7 @@ class Classifier(object):
         return acc
 
     def train(self,ds,y,eval_every=1,dev=None):
-        ds = self.normalize_dataset(ds)
+        ds = normalize_dataset(ds)
         X_train = self.vec.fit_transform(ds,y)
         X_train = torch.from_numpy(X_train).type(torch.float)
         y_train = torch.LongTensor(y)
@@ -110,7 +75,6 @@ class Classifier(object):
             dev_loss_history = []
             dev_accuracy_history = []
         
-        num_batches = len(torch.arange(len(ds)).split(self.batch_size))
         for e in range(self.epochs):
             print('Epoch {}/{}'.format(e+1,self.epochs))
             for i, batch in enumerate(train_dataloader):
@@ -125,7 +89,6 @@ class Classifier(object):
                 
                 if (e * self.epochs + i) % eval_every == 0:
 
-                    print('Batch {}/{}. Epoch {}/{}'.format(i,num_batches,e+1,self.epochs))
                     print('Train loss: {:.5f}'.format(loss.item()))
                     train_loss_history.append(loss.item())
                     print('Train accuracy:',end=' ')
@@ -197,17 +160,3 @@ class Classifier(object):
         y_pred = np.hstack(y_pred_batches)
 
         return y_pred
-
-    def normalize_dataset(self,ds):
-
-        accents = [
-            ('[óòöøôõ]','ó'), ('[áàäåâã]','á'), ('[íìïî]','í'), ('[éèëê]','é'), ('[úùû]','ú'), ('[ç¢]','c'), 
-            ('[ÓÒÖØÔÕ]','Ó'), ('[ÁÀÄÅÂÃ]','Á'), ('[ÍÌÏÎ]','Í'), ('[ÉÈËÊ]','É'), ('[ÚÙÛ]','Ù'), ('Ç','C'),
-            ('[ý¥]','y'), ('š','s'), ('ß','b'), ('\x08','')
-        ]
-        for rep, rep_with in accents:
-            ds  = ds.str.replace(rep,rep_with,regex=True)
-
-        ds = ds.str.lower()
-
-        return ds

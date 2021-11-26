@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -76,13 +77,18 @@ def parse_arguments():
     group.add_argument('--test', action='store_true')
 
     # Argumentos para el tokenizer:
-    parser.add_argument('--ngram_range', type=int, nargs=2, required=True)
-    parser.add_argument('--max_features', type=int, required=True)
+    parser.add_argument('--max_tokens', type=int, required=True)
+    parser.add_argument('--frequency_cutoff', type=int, required=True)
+    parser.add_argument('--max_sent_len', type=int, required=True)
+    parser.add_argument('--rnn', type=str, required=True)
+    parser.add_argument('--bidirectional', action='store_true',default=False)
+    parser.add_argument('--embedding_dim', type=int, required=True)
     parser.add_argument('--hidden_size', type=int, required=True)
+    parser.add_argument('--num_layers', type=int, required=True)
+    parser.add_argument('--dropout', type=float, required=True)
     parser.add_argument('--num_epochs', type=int, required=True)
     parser.add_argument('--batch_size', type=int, required=True)
     parser.add_argument('--learning_rate', type=float, required=True)
-    parser.add_argument('--weight_decay', type=float, required=True)
     parser.add_argument('--device', type=str, required=True)
     parser.add_argument('--eval_every', type=int, required=True)
 
@@ -100,6 +106,9 @@ def show_results(
         description,
         is_dev
     ):
+
+    def MAE(y_true,y_predict):
+        return np.abs(y_true - y_predict).mean()*100
     
     now = datetime.now()
     title = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -116,17 +125,23 @@ Classification Report (Train):
     
 {}
 
+MAE(%): {:.2f}
+
 
 Classification Report ({}):
 ------------------------------
     
 {}
 
+MAE(%): {:.2f}
+
     """.format(
         description,
-        classification_report(y_train_true,y_train_predict,labels=list_of_labels),
+        classification_report(y_train_true,y_train_predict,labels=list_of_labels,digits=3),
+        MAE(y_train_true,y_train_predict),
         name,
-        classification_report(y_dev_true,y_dev_predict,labels=list_of_labels)
+        classification_report(y_dev_true,y_dev_predict,labels=list_of_labels,digits=3),
+        MAE(y_train_true,y_train_predict)
     )
 
     with open('{}/{}_classification_report.log'.format(results_dir,title),'w') as f:
@@ -165,13 +180,13 @@ Classification Report ({}):
     l = len(history['train_loss'])
     eval_every = history['eval_every']
     ax1.plot(np.arange(l)*eval_every,history['train_loss'],label='Train')
-    ax1.plot(np.arange(l)*eval_every,history['dev_loss'],label='Dev')
+    ax1.plot(np.arange(l)*eval_every,history['dev_loss'],label=name)
     ax1.set_title('Loss',fontsize='xx-large')
     ax1.grid(True)
     ax1.legend(loc='upper right',fontsize='x-large')
 
     ax2.plot(np.arange(l)*eval_every,history['train_accuracy'],label='Train')
-    ax2.plot(np.arange(l)*eval_every,history['dev_accuracy'],label='Dev')
+    ax2.plot(np.arange(l)*eval_every,history['dev_accuracy'],label=name)
     ax2.set_title('Accuracy',fontsize='xx-large')
     ax2.grid(True)
     ax2.legend(loc='lower right',fontsize='x-large')

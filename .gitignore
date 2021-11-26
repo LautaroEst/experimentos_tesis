@@ -8,4 +8,5 @@ __pycache__*
 *.bin
 experimentos_old/*
 pretrained_models/*
-experimentos/00_inspeccion_melisa/tokenization/results/*
+experimentos/**/results_*
+experimentos/**/results/*

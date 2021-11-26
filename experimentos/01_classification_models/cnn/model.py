@@ -56,84 +56,56 @@ class VocabVectorizer(object):
         return ds
 
 
-class RNNModel(nn.Module):
-
-    def __init__(self,rnn,bidirectional,embedding_dim,num_embeddings,hidden_size,num_outs,num_layers,dropout):
+class CNNModel(nn.Module):
+    def __init__(self,num_embeddings,embedding_dim,filter_sizes,n_filters,nclasses,dropout):
         super().__init__()
         self.emb = nn.Embedding(num_embeddings,embedding_dim,padding_idx=0)
-
-        if 'RNN' in rnn:
-            if rnn == 'RNNrelu':
-                nonlinearity = 'relu'
-            elif rnn == 'RNNtanh':
-                nonlinearity = 'tanh'
-            self.rnn = nn.RNN(input_size=embedding_dim,hidden_size=hidden_size,
-                    num_layers=num_layers,nonlinearity=nonlinearity,bias=True,
-                    batch_first=True,dropout=dropout,bidirectional=bidirectional)
-
-        elif rnn == 'LSTM':
-            self.rnn = nn.LSTM(input_size=embedding_dim,hidden_size=hidden_size,
-                    num_layers=num_layers,bias=True,batch_first=True,
-                    dropout=dropout,bidirectional=bidirectional)
-
-        elif rnn == 'GRU':
-            self.rnn = nn.GRU(input_size=embedding_dim,hidden_size=hidden_size,
-                    num_layers=num_layers,bias=True,batch_first=True,
-                    dropout=dropout,bidirectional=bidirectional)
-
-        self.rnn_type = rnn
-        self.in_linear = 2*hidden_size if bidirectional else hidden_size
-        self.linear_out = nn.Linear(self.in_linear,num_outs)
+        self.cnns = nn.ModuleList([torch.nn.Conv1d(in_channels=embedding_dim,out_channels=n_filters,kernel_size=fs,stride=1,padding=0,dilation=1,groups=1,bias=True,padding_mode='zeros') for fs in filter_sizes])
+        self.linear = nn.Linear(len(filter_sizes)*n_filters, nclasses)
         self.dropout = nn.Dropout(dropout)
-
-        
-    def forward(self,in_sequence,seq_len):
-        emb_seq = self.emb(in_sequence)
-        packed_seq = pack_padded_sequence(emb_seq,seq_len,batch_first=True)
-        out, hidden = self.rnn(packed_seq)
-        if self.rnn_type == 'LSTM':
-            hidden = hidden[0]
-        scores = self.linear_out(self.dropout(hidden.transpose(0,1)[:,-2:,:].reshape(-1,self.in_linear)))
-        #out = pad_packed_sequence(out,batch_first=True,padding_value=0)
+    
+    def forward(self,x):
+        x = self.emb(x).transpose(1,2)
+        x = [torch.relu(cnn(x).transpose(1,2)) for cnn in self.cnns]
+        x = torch.cat([torch.max(conved,dim=1,keepdim=True)[0] for conved in x],dim=2).squeeze(dim=1)
+        scores = self.linear(self.dropout(x))
         return scores
-        
 
-        
 def batch_iter(ds,y,batch_size,pad_idx):
 
     N = len(ds)
-    df = pd.concat((ds,pd.Series(y)),keys=['x','y'],axis=1)
+    #df = pd.concat((ds,pd.Series(y)),keys=['x','y'],axis=1)
     indices_batches = torch.randperm(N).split(batch_size)
     for indices in indices_batches:
-        batch = df.iloc[indices,:].sort_values(by=['x'],key=lambda x: x.str.len(),ascending=False)
+        #batch = df.iloc[indices,:].sort_values(by=['x'],key=lambda x: x.str.len(),ascending=False)
 
-        sequence_batch, y_batch = batch['x'], batch['y'].values
-        sent_lenghts = sequence_batch.str.len().tolist()
-        max_len = len(sequence_batch.iloc[0])
+        #sequence_batch, y_batch = batch['x'], batch['y'].values
+        sequence_batch, y_batch = ds.iloc[indices].reset_index(drop=True), y[indices]
+        #sent_lenghts = sequence_batch.str.len().tolist()
+        #max_len = len(sequence_batch.iloc[0])
+        max_len = sequence_batch.str.len().max()
         padded_sequences = [sent + [pad_idx] * (max_len-len(sent)) for sent in sequence_batch]
         padded_sequences = torch.LongTensor(padded_sequences)
         y_batch = torch.LongTensor(y_batch)
-        yield padded_sequences, sent_lenghts, y_batch
+        #yield padded_sequences, sent_lenghts, y_batch
+        yield padded_sequences, y_batch
 
-                                
 
 class Classifier(object):
 
-    def __init__(self,nclasses,rnn,bidirectional,frequency_cutoff,max_tokens,max_sent_len,
-                embedding_dim,hidden_size,num_layers,dropout,batch_size,
+    def __init__(self,nclasses,frequency_cutoff,max_tokens,max_sent_len,
+                embedding_dim,n_filters,filter_sizes,dropout,batch_size,
                 learning_rate,num_epochs,device):
 
         self.embedding_dim = embedding_dim
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
+        self.n_filters = n_filters
+        self.filter_sizes = filter_sizes
         self.dropout = dropout
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.epochs = num_epochs
         self.nclasses = nclasses
         self.device_type = device
-        self.rnn = rnn
-        self.bidirectional = bidirectional
 
         self.vec = VocabVectorizer(frequency_cutoff,
                         max_tokens,max_sent_len,'<pad>','<unk>')
@@ -149,7 +121,6 @@ class Classifier(object):
         print('{}/{} ({:.2f}%)'.format(sum(correct),len(correct),acc * 100))
         return acc
 
-
     def train(self,ds,y,eval_every=1,dev=None):
         ds = self.normalize_dataset(ds)
         ds = self.vec.fit_transform(ds)
@@ -161,8 +132,8 @@ class Classifier(object):
             dev = (ds_dev,dev[1])
 
         device = torch.device(self.device_type)    
-        model = RNNModel(self.rnn,self.bidirectional,self.embedding_dim,len(self.vec.vocab),
-                self.hidden_size,self.nclasses,self.num_layers,self.dropout)
+        model = CNNModel(len(self.vec.vocab),self.embedding_dim,self.filter_sizes,
+                        self.n_filters,self.nclasses,self.dropout)
         model.to(device)
         model.train()
 
@@ -178,11 +149,11 @@ class Classifier(object):
         num_batches = len(torch.arange(len(ds)).split(self.batch_size))
         for e in range(self.epochs):
 
-            for i, (sequence_batch, seq_len, y_batch) in enumerate(batch_iter(ds,y,self.batch_size,pad_idx)):
+            for i, (sequence_batch, y_batch) in enumerate(batch_iter(ds,y,self.batch_size,pad_idx)):
                 sequence_batch = sequence_batch.to(device=device)
                 y_batch = y_batch.to(device=device)
 
-                scores = model(sequence_batch,seq_len)
+                scores = model(sequence_batch)
                 loss = criterion(scores,y_batch)
 
                 optimizer.zero_grad()
@@ -203,13 +174,13 @@ class Classifier(object):
                         N_dev = len(ds_dev)
                         idx = np.random.permutation(N_dev)[:self.batch_size]
                         ds_dev, y_dev = ds_dev.iloc[idx].reset_index(drop=True), y_dev[idx]
-                        sequence_dev_batch, seq_dev_len, y_dev_batch = next(batch_iter(ds_dev,y_dev,self.batch_size,pad_idx))
+                        sequence_dev_batch, y_dev_batch = next(batch_iter(ds_dev,y_dev,self.batch_size,pad_idx))
                         sequence_dev_batch = sequence_dev_batch.to(device=device)
                         y_dev_batch = y_dev_batch.to(device=device)
 
                         model.eval()
                         with torch.no_grad():
-                            scores = model(sequence_dev_batch,seq_dev_len)
+                            scores = model(sequence_dev_batch)
                             loss = criterion(scores,y_dev_batch)
                             print('Dev loss: {:.5f}'.format(loss.item()))
                             dev_loss_history.append(loss.item())
@@ -244,8 +215,6 @@ class Classifier(object):
             }
         return history
             
-
-
     def predict(self,ds):
         ds = self.normalize_dataset(ds)
         ds = self.vec.transform(ds)
@@ -259,18 +228,13 @@ class Classifier(object):
         y_pred_batches = []
         for indices in indices_batches:
             sequence_batch = ds.iloc[indices].reset_index(drop=True)
-            sent_lenghts = sequence_batch.str.len()
-            sorted_idx = sent_lenghts.argsort()[::-1]
-            resorted_idx = sorted_idx.argsort()
-            sorted_sequence_batch = sequence_batch.iloc[sorted_idx].reset_index(drop=True)
-            sorted_sent_lenghts = sent_lenghts.iloc[sorted_idx].tolist()
-            max_len = sorted_sent_lenghts[0]
-            padded_sequences = [sent + [pad_idx] * (max_len-len(sent)) for sent in sorted_sequence_batch]
+            max_len = sequence_batch.str.len().max()
+            padded_sequences = [sent + [pad_idx] * (max_len-len(sent)) for sent in sequence_batch]
             padded_sequences = torch.LongTensor(padded_sequences).to(device=device)
 
             with torch.no_grad():
-                scores = model(padded_sequences,sorted_sent_lenghts)
-                y_pred = torch.argmax(scores,dim=1).cpu().numpy()[resorted_idx]
+                scores = model(padded_sequences)
+                y_pred = torch.argmax(scores,dim=1).cpu().numpy()
                 y_pred_batches.append(y_pred)
         
         y_pred = np.hstack(y_pred_batches)

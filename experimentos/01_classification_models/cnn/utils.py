@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -5,6 +6,7 @@ import os
 import argparse
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
+import pickle
 
 DATA_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/datav2/'
 DATA_ES_PATH = DATA_PATH + 'esp/'
@@ -75,8 +77,18 @@ def parse_arguments():
     group.add_argument('--test', action='store_true')
 
     # Argumentos para el tokenizer:
-    parser.add_argument('--ngram_range', type=int, nargs=2, required=True)
-    parser.add_argument('--max_features', type=int, required=True)
+    parser.add_argument('--max_tokens', type=int, required=True)
+    parser.add_argument('--frequency_cutoff', type=int, required=True)
+    parser.add_argument('--max_sent_len', type=int, required=True)
+    parser.add_argument('--embedding_dim', type=int, required=True)
+    parser.add_argument('--n_filters', type=int, required=True)
+    parser.add_argument('--filter_sizes', type=int, nargs='+', required=True)
+    parser.add_argument('--dropout', type=float, required=True)
+    parser.add_argument('--num_epochs', type=int, required=True)
+    parser.add_argument('--batch_size', type=int, required=True)
+    parser.add_argument('--learning_rate', type=float, required=True)
+    parser.add_argument('--device', type=str, required=True)
+    parser.add_argument('--eval_every', type=int, required=True)
 
     args = vars(parser.parse_args())
     return args
@@ -87,6 +99,7 @@ def show_results(
         y_train_true,
         y_dev_predict,
         y_dev_true,
+        history,
         nclasses,
         description,
         is_dev
@@ -156,3 +169,25 @@ MAE(%): {:.2f}
     
     fig.tight_layout()
     plt.savefig('{}/{}_confusion_matrix.png'.format(results_dir,title))
+
+    # Loss and accuracy history:
+    with open("{}/{}_history.pkl".format(results_dir,title),'wb') as f:
+        pickle.dump(history,f)
+
+    fig, (ax1, ax2) = plt.subplots(1,2,figsize=(10,6))
+    l = len(history['train_loss'])
+    eval_every = history['eval_every']
+    ax1.plot(np.arange(l)*eval_every,history['train_loss'],label='Train')
+    ax1.plot(np.arange(l)*eval_every,history['dev_loss'],label=name)
+    ax1.set_title('Loss',fontsize='xx-large')
+    ax1.grid(True)
+    ax1.legend(loc='upper right',fontsize='x-large')
+
+    ax2.plot(np.arange(l)*eval_every,history['train_accuracy'],label='Train')
+    ax2.plot(np.arange(l)*eval_every,history['dev_accuracy'],label=name)
+    ax2.set_title('Accuracy',fontsize='xx-large')
+    ax2.grid(True)
+    ax2.legend(loc='lower right',fontsize='x-large')
+
+    fig.tight_layout()
+    plt.savefig('{}/{}_history.png'.format(results_dir,title))

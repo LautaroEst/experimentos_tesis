@@ -101,6 +101,9 @@ def show_results(
         is_dev
     ):
     
+    def MAE(y_true,y_predict):
+        return np.abs(y_true - y_predict).mean()*100
+
     now = datetime.now()
     title = now.strftime("%Y-%m-%d-%H-%M-%S")
     list_of_labels = list(range(nclasses))
@@ -113,8 +116,10 @@ def show_results(
 
 Classification Report (Train):
 ------------------------------
-    
+
 {}
+    
+MAE(%): {:.2f}
 
 
 Classification Report ({}):
@@ -122,11 +127,15 @@ Classification Report ({}):
     
 {}
 
+MAE(%): {:.2f}
+
     """.format(
         description,
-        classification_report(y_train_true,y_train_predict,labels=list_of_labels),
+        classification_report(y_train_true,y_train_predict,labels=list_of_labels,digits=3),
+        MAE(y_train_true,y_train_predict),
         name,
-        classification_report(y_dev_true,y_dev_predict,labels=list_of_labels)
+        classification_report(y_dev_true,y_dev_predict,labels=list_of_labels,digits=3),
+        MAE(y_train_true,y_train_predict)
     )
 
     with open('{}/{}_classification_report.log'.format(results_dir,title),'w') as f:
@@ -165,13 +174,13 @@ Classification Report ({}):
     l = len(history['train_loss'])
     eval_every = history['eval_every']
     ax1.plot(np.arange(l)*eval_every,history['train_loss'],label='Train')
-    ax1.plot(np.arange(l)*eval_every,history['dev_loss'],label='Dev')
+    ax1.plot(np.arange(l)*eval_every,history['dev_loss'],label=name)
     ax1.set_title('Loss',fontsize='xx-large')
     ax1.grid(True)
     ax1.legend(loc='upper right',fontsize='x-large')
 
     ax2.plot(np.arange(l)*eval_every,history['train_accuracy'],label='Train')
-    ax2.plot(np.arange(l)*eval_every,history['dev_accuracy'],label='Dev')
+    ax2.plot(np.arange(l)*eval_every,history['dev_accuracy'],label=name)
     ax2.set_title('Accuracy',fontsize='xx-large')
     ax2.grid(True)
     ax2.legend(loc='lower right',fontsize='x-large')

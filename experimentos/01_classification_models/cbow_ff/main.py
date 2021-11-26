@@ -18,13 +18,23 @@ def make_description(args,is_dev):
 Descripción del experimento:
 ----------------------------
 
-Modelo de clasificación con un modelo TfIdf + Naive Bayes.
+Modelo de clasificación con un modelo de bolsa de palabras continuo.
 
 Argumentos del entrenamiento utilizados:
 - Cantidad de clases: {nclasses}
 - Idioma: {lang}
-- Rango de los n-gramas: {ngram_range}
-- Cantidad máxima de features en el vocabulario: {max_features}
+- Cantidad máxima de palabras en el vocabulario: {max_tokens}
+- Frecuencia mínima de cada palabra: {frequency_cutoff}
+- Cantidad máxima de tokens por review: {max_sent_len}
+- Dimensión de los embeddings: {embedding_dim}
+- Dimensión de las capas ocultas: {hidden_size}
+- Cantidad de capas ocultas: {num_layers}
+- Probabilidad de dropout: {dropout}
+- Tamaño del batch: {batch_size}
+- Tasa de aprendizaje: {learning_rate}
+- Cantidad de epochs: {num_epochs}
+- Dispositivo de entrenamiento: {device}
+- Mostrar los datos cada {eval_every} batches.
 """.format(**args)
 
     if is_dev:
@@ -43,6 +53,7 @@ def main():
     nclasses = args.pop('nclasses')
     _ = args.pop('test')
     devsize = args.pop('devsize')
+    eval_every = args.pop('eval_every')
     
     if is_dev:
         df_train, df_dev_test = load_and_split(
@@ -68,10 +79,12 @@ def main():
 
     # Model training:
     print('Training...')
-    model.train(
-            df_train['review_content'],
-            df_train['review_rate'].values
-        )
+    history = model.train(
+                df_train['review_content'],
+                df_train['review_rate'].values,
+                eval_every=eval_every,
+                dev=(df_dev_test['review_content'],df_dev_test['review_rate'].values)
+            )
 
     # Model evaluation:
     print('Evaluating results...')
@@ -84,6 +97,7 @@ def main():
         y_train_true,
         y_devtest_predict,
         y_devtest_true,
+        history,
         nclasses,
         description,
         is_dev

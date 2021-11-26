@@ -1,11 +1,28 @@
 #! /bin/bash
 
-declare -a arr=(10000 20000 40000 60000 80000)
+declare -a cls=(2 3 5)
 
-for mf in "${arr[@]}" 
+for n in "${cls[@]}" 
 do
-    echo "max features: $mf"
     echo ""
-    python main.py --nclasses 2 --lang es --devsize 0.05 --ngram_range 1 2 --max_features 100 --hidden_size 1 --num_epochs 1 --batch_size 1024 --learning_rate 1e-3 --weight_decay 0.0 --device "cuda:1" --eval_every 100
+    echo "LSTM. nclasses: $n"
+    echo ""
+    python main.py --nclasses $n --lang es --test --max_tokens 60000 --frequency_cutoff 1 --max_sent_len 512 --embedding_dim 300 --rnn "LSTM" --bidirectional --hidden_size 200 --num_layers 1 --dropout 0.2 --num_epochs 8 --batch_size 256 --learning_rate 5e-4 --device "cuda:1" --eval_every 100
+    echo ""
+    echo "GRU. nclasses: $n"
+    echo ""
+    python main.py --nclasses $n --lang es --test --max_tokens 60000 --frequency_cutoff 1 --max_sent_len 512 --embedding_dim 300 --rnn "GRU" --hidden_size 200 --num_layers 1 --dropout 0.2 --num_epochs 8 --batch_size 256 --learning_rate 5e-4 --device "cuda:1" --eval_every 100
     echo ""
 done
+
+echo ""
+echo "RNN. Test."
+echo ""
+python main.py --nclasses 3 --lang es --test --max_tokens 60000 --frequency_cutoff 1 --max_sent_len 512 --embedding_dim 300 --rnn "RNNrelu" --bidirectional --hidden_size 200 --num_layers 1 --dropout 0.7 --num_epochs 12 --batch_size 256 --learning_rate 5e-4 --device "cuda:1" --eval_every 100
+echo ""
+
+echo ""
+echo "RNN. Test."
+echo ""
+python main.py --nclasses 5 --lang es --test --max_tokens 60000 --frequency_cutoff 1 --max_sent_len 512 --embedding_dim 300 --rnn "RNNrelu" --bidirectional --hidden_size 200 --num_layers 1 --dropout 0.7 --num_epochs 12 --batch_size 256 --learning_rate 5e-4 --device "cuda:1" --eval_every 100
+echo ""

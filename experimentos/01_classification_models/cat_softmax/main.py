@@ -59,6 +59,11 @@ def main():
                             devsize=devsize
                         )
     else:
+        df_train = load_data(
+            lang=lang,
+            split='train',
+            nclasses=nclasses
+        )
         df_dev_test = load_data(
             lang=lang,
             split='test',
