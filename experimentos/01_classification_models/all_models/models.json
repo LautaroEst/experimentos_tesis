@@ -1,0 +1,99 @@
+{
+    "naive_bayes": {
+        "clf": "NaiveBayesClassifier",
+        "model_args": {
+            "ngram_range": [1,3],
+            "max_features": 100000
+        },
+        "hyperparams": {}
+    },
+    "features": {
+        "clf":"FeaturesClassifier",
+        "model_args": {
+            "ngram_range": [1,2],
+            "max_features": 50000,
+            "hidden_size": 400
+        },
+        "hyperparams": ["num_epochs","batch_size", "learning_rate", "weight_decay", "device", "eval_every"]
+    },
+    "cbow": {
+        "clf": "CBOWClassifier",
+        "model_args": {
+            "frequency_cutoff": 1,
+            "max_tokens": 60000,
+            "max_sent_len": 512,
+            "embedding_dim": 300,
+            "hidden_size": 200,
+            "num_layers": 4,
+            "pretrained_embeddings": null
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "cbow_emb": {
+        "clf": "CBOWClassifier",
+        "model_args": {
+            "frequency_cutoff": 1,
+            "max_tokens": 60000,
+            "max_sent_len": 512,
+            "embedding_dim": 300,
+            "hidden_size": 200,
+            "num_layers": 4,
+            "pretrained_embeddings": "word2vec"
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "rnn": {
+        "clf": "RNNClassifier",
+        "model_args": {
+            "frequency_cutoff": 1,
+            "max_tokens": 60000,
+            "max_sent_len": 512,
+            "embedding_dim": 300,
+            "rnn": "RNNrelu",
+            "bidirectional": true,
+            "hidden_size": 200,
+            "num_layers": 1
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "lstm": {
+        "clf": "RNNClassifier",
+        "model_args": {
+            "frequency_cutoff": 1,
+            "max_tokens": 60000,
+            "max_sent_len": 512,
+            "embedding_dim": 300,
+            "rnn": "LSTM",
+            "bidirectional": true,
+            "hidden_size": 200,
+            "num_layers": 1
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "gru": {
+        "clf": "RNNClassifier",
+        "model_args": {
+            "frequency_cutoff": 1,
+            "max_tokens": 60000,
+            "max_sent_len": 512,
+            "embedding_dim": 300,
+            "rnn": "GRU",
+            "bidirectional": false,
+            "hidden_size": 200,
+            "num_layers": 1
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "cnn": {
+        "clf": "CNNClassifier",
+        "model_args": {
+            "max_tokens": 60000,
+            "frequency_cutoff": 1,
+            "max_sent_len": 512,
+            "embedding_dim": 300,
+            "n_filters": 8,
+            "filter_sizes": [3, 5, 7]
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    }
+}

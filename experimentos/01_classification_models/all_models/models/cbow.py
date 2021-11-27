@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
-from .utils import VocabVectorizer
+from .utils import VocabVectorizer, init_embeddings
 import numpy as np
 
 
@@ -51,7 +51,7 @@ class CBOWClassifier(object):
 
     def __init__(self,nclasses,frequency_cutoff,max_tokens,max_sent_len,
                 embedding_dim,hidden_size,num_layers,dropout,batch_size,
-                learning_rate,num_epochs,device):
+                learning_rate,num_epochs,device,pretrained_embeddings):
 
         self.embedding_dim = embedding_dim
         self.hidden_size = hidden_size
@@ -62,6 +62,7 @@ class CBOWClassifier(object):
         self.epochs = num_epochs
         self.nclasses = nclasses
         self.device_type = device
+        self.pretrained_embeddings = pretrained_embeddings
 
         self.vec = VocabVectorizer(frequency_cutoff,
                         max_tokens,max_sent_len,'<pad>','<unk>')
@@ -79,23 +80,29 @@ class CBOWClassifier(object):
 
 
     def train(self,ds,y,eval_every=1,dev=None):
-        ds = self.normalize_dataset(ds)
         ds = self.vec.fit_transform(ds)
         pad_idx = self.vec.vocab[self.vec.pad_token]
 
         if dev:
-            ds_dev = self.normalize_dataset(dev[0])
-            ds_dev = self.vec.transform(ds_dev)
-            dev = (ds_dev,dev[1])
+            dev = (self.vec.transform(dev[0]), dev[1])
 
         device = torch.device(self.device_type)    
         model = CBOWModel(self.embedding_dim,len(self.vec.vocab),
                 self.hidden_size,self.nclasses,self.num_layers,self.dropout,pad_idx)
+        
+        optimizer = optim.Adam(model.parameters(),lr=self.learning_rate)
+        criterion = nn.CrossEntropyLoss()
+
+        if self.pretrained_embeddings:
+            model = init_embeddings(model,self.vocab,self.pretrained_embeddings)
+            for param in model.emb.parameters():
+                param.requires_grad = False
+
         model.to(device)
         model.train()
 
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(model.parameters(),lr=self.learning_rate)
+        
+        
 
         train_loss_history = []
         train_accuracy_history = []
@@ -177,7 +184,6 @@ class CBOWClassifier(object):
 
 
     def predict(self,ds):
-        ds = self.normalize_dataset(ds)
         ds = self.vec.transform(ds)
         pad_idx = self.vec.vocab[self.vec.pad_token]
         device = torch.device(self.device_type)

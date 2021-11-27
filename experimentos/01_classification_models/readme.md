@@ -129,3 +129,17 @@ batch_size=256,
 learning_rate=5e-4,
 num_epochs=8,
 ```
+
+* CNN melisa-2, melisa-3, melisa-5
+```
+max_tokens=60000,
+frequency_cutoff=1,
+max_sent_len=512,
+embedding_dim=300,
+n_filters=8,
+filter_sizes=[3, 5, 7],
+dropout=0.2,
+num_epochs=8,
+batch_size=256,
+learning_rate=5e-4
+```

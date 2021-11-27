@@ -1,6 +1,5 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from .utils import normalize_dataset
 
 
 class NaiveBayesClassifier(object):
@@ -23,13 +22,11 @@ class NaiveBayesClassifier(object):
         self.clf = MultinomialNB(alpha=1.,fit_prior=True,class_prior=None)
 
     def train(self,ds,y):
-        ds = normalize_dataset(ds)
         X_train = self.vec.fit_transform(ds)
         y_train = y
         self.clf.fit(X_train,y_train)
 
     def predict(self,ds):
-        ds = self.normalize_dataset(ds)
         X = self.vec.transform(ds)
         y_predict = self.clf.predict(X)
         return y_predict

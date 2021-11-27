@@ -1,22 +1,16 @@
+from gensim.models.keyedvectors import KeyedVectors
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 from collections import defaultdict
 
-
-def normalize_dataset(ds):
-
-    accents = [
-        ('[óòöøôõ]','ó'), ('[áàäåâã]','á'), ('[íìïî]','í'), ('[éèëê]','é'), ('[úùû]','ú'), ('[ç¢]','c'), 
-        ('[ÓÒÖØÔÕ]','Ó'), ('[ÁÀÄÅÂÃ]','Á'), ('[ÍÌÏÎ]','Í'), ('[ÉÈËÊ]','É'), ('[ÚÙÛ]','Ù'), ('Ç','C'),
-        ('[ý¥]','y'), ('š','s'), ('ß','b'), ('\x08','')
-    ]
-    for rep, rep_with in accents:
-        ds  = ds.str.replace(rep,rep_with,regex=True)
-
-    ds = ds.str.lower()
-
-    return ds
-
+import torch
+import os
+EMBEDDINGS_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/pretrained_models/'
+embeddings_file_paths = {
+    'fasttext': EMBEDDINGS_PATH + 'fasttext-sbwc.vec',
+    'glove': EMBEDDINGS_PATH + 'glove-sbwc.i25.vec',
+    'word2vec': EMBEDDINGS_PATH + 'SBW-vectors-300-min5.txt'
+}
 
 class CatBOWVectorizer(object):
 
@@ -97,3 +91,67 @@ class VocabVectorizer(object):
         unk_idx = vocab[self.unk_token]
         ds = ds.apply(lambda sent: [vocab.get(tk,unk_idx) for tk in sent])
         return ds
+
+
+
+def load_fasttext(emb_layer,idx2tk,wordvectors,embedding_dim,min_subword,max_subword):
+
+    def window_gen(word,min_len,max_len):
+        return (word[i-n:i] for n in range(min_len,max_len+1) for i in range(n,len(word)+1))
+
+    with torch.no_grad():
+        for idx, tk in idx2tk.items():
+            try:
+                emb_layer.weight[idx,:] = torch.from_numpy(wordvectors[tk].copy()).float()
+            except KeyError:
+                v = np.zeros(embedding_dim,dtype=float)
+                for w in window_gen(tk,min_subword,max_subword):
+                    try:
+                        v += wordvectors[w].copy()
+                    except KeyError:
+                        v += np.random.randn(embedding_dim)
+                emb_layer.weight[idx,:] = torch.from_numpy(v).float()
+    
+    return emb_layer
+
+
+def load_glove_word2vec(embedding_layer,idx2tk,wordvectors,embedding_dim):
+    
+    with torch.no_grad():
+        for idx, tk in idx2tk.items():
+            try:
+                embedding_layer.weight[idx,:] = torch.from_numpy(wordvectors[tk].copy()).float()
+            except KeyError:
+                embedding_layer.weight[idx,:] = torch.randn(embedding_dim)
+    
+    return embedding_layer
+        
+
+def init_embeddings(model,vocab,embeddings):
+    
+    idx2tk = {idx:tk for tk, idx in vocab.items()}
+    idx2tk.pop(0)
+    idx2tk.pop(1)
+
+    wordvectors_file_vec = embeddings_file_paths[embeddings]
+
+    embedding_dim = 300
+    if embeddings == 'fasttext':
+        cantidad = 855380
+        print('Loading {} pretrained word embeddings...'.format(cantidad))
+        wordvectors = KeyedVectors.load_word2vec_format(wordvectors_file_vec, limit=cantidad)
+        min_subword = 3
+        max_subword = 6
+        model.emb = load_fasttext(model.emb,idx2tk,wordvectors,embedding_dim,min_subword,max_subword)
+    elif embeddings == 'glove':
+        cantidad = 855380
+        print('Loading {} pretrained word embeddings...'.format(cantidad))
+        wordvectors = KeyedVectors.load_word2vec_format(wordvectors_file_vec, limit=cantidad)
+        model.emb = load_glove_word2vec(model.emb,idx2tk,wordvectors,embedding_dim)
+    elif embeddings == 'word2vec':
+        cantidad = 1000653
+        print('Loading {} pretrained word embeddings...'.format(cantidad))
+        wordvectors = KeyedVectors.load_word2vec_format(wordvectors_file_vec, limit=cantidad)
+        model.emb = load_glove_word2vec(model.emb,idx2tk,wordvectors,embedding_dim)
+
+    return model

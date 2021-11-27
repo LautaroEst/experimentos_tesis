@@ -1,117 +1,92 @@
+from datetime import datetime
 from models import *
+import sys
+from utils import *
+import json
+import os
 
-def clf_iterator(nclasses):
-    classifiers = {
 
-        NaiveBayesClassifier: dict(
-            nclasses=nclasses,
-            ngram_range=(1,2),
-            max_features=100000
-        ),
+MODELS_PATH = os.getcwd() + "/models.json"
+# MODELS_PATH = "/mnt/disco.mafalda/home/lestien/Documents/Trabajos 2021/melisa/experimentos/01_classification_models/all_models/models.json"
 
-        FeaturesClassifier: dict(
-            nclasses=nclasses,
-            ngram_range=(1,3),
-            max_features=100000,
-            hidden_size=50,
-            num_epochs=8,
-            batch_size=256,
-            learning_rate=5e-4,
-            weight_decay=0.0,
-            device='cuda:1'
-        ),
-
-        CBOWClassifier: dict(
-            nclasses=nclasses,
-            frequency_cutoff=1,
-            max_tokens=60000,
-            max_sent_len=512,
-            embedding_dim=300,
-            hidden_size=200,
-            num_layers=4,
-            dropout=0.0,
-            batch_size=256,
-            learning_rate=5e-4,
-            num_epochs=16,
-            device="cuda:1"
-        ),
-
-        RNNClassifier: dict(
-            nclasses=nclasses,
-            frequency_cutoff=1,
-            max_tokens=60000,
-            max_sent_len=512,
-            embedding_dim=300,
-            rnn="RNNrelu",
-            bidirectional=True,
-            hidden_size=200,
-            num_layers=1,
-            dropout=0.0,
-            batch_size=256,
-            learning_rate=5e-4,
-            num_epochs=16,
-            device="cuda:1"
-        ),
-
-        RNNClassifier: dict(
-            nclasses=nclasses,
-            frequency_cutoff=1,
-            max_tokens=60000,
-            max_sent_len=512,
-            embedding_dim=300,
-            rnn="LSTM",
-            bidirectional=True,
-            hidden_size=200,
-            num_layers=1,
-            dropout=0.0,
-            batch_size=256,
-            learning_rate=5e-4,
-            num_epochs=16,
-            device="cuda:1"
-        ),
-
-        RNNClassifier: dict(
-            nclasses=nclasses,
-            frequency_cutoff=1,
-            max_tokens=60000,
-            max_sent_len=512,
-            embedding_dim=300,
-            rnn="GRU",
-            bidirectional=False,
-            hidden_size=200,
-            num_layers=1,
-            dropout=0.0,
-            batch_size=256,
-            learning_rate=5e-4,
-            num_epochs=16,
-            device="cuda:1"
-        ),
-
-        CNNClassifier: dict(
-            nclasses=nclasses,
-            frequency_cutoff=1,
-            max_tokens=60000,
-            max_sent_len=512,
-            embedding_dim=300,
-            n_filters=8,
-            filter_sizes=(3,5,7),
-            dropout=0.0,
-            batch_size=256,
-            learning_rate=1e-3,
-            num_epochs=1,
-            device="cuda:1"
-        )
-    }
+def load_models():
+    with open(MODELS_PATH,'r') as f:
+        classifiers = json.load(f)
     
-    for clf, kwargs in classifiers.items():
-        yield clf, kwargs
+    for key in classifiers.keys():
+        classifiers[key]["clf"] = getattr(sys.modules[__name__],classifiers[key]["clf"])
+
+    return classifiers
+
+
+def init_clf(args):
+
+    clf_cls, clf_args = args['clf_cls'], args['clf_args']
+    model = clf_cls(**clf_args)
+    eval_every = args['eval_every']
+
+    return model, eval_every
+
+
+def load_dataset(nclasses,dataset,devsize,split):
+    if dataset == 'melisa':
+        if split == 'dev':
+            df_train, df_devtest = load_and_split_melisa(nclasses,devsize)
+            ds_train = normalize_dataset(df_train['review_content'])
+        else:
+            df_train = load_melisa('train',nclasses)
+            df_devtest = load_melisa('test',nclasses)
+
+        ds_train = normalize_dataset(df_train['review_content'])
+        y_train = df_train['review_rate'].values
+        ds_devtest = normalize_dataset(df_devtest['review_content'])
+        y_devtest = df_devtest['review_rate'].values
+        data = (ds_train, y_train, ds_devtest, y_devtest)
+
+    elif dataset == 'amazon':
+        if split == 'dev':
+            pass
+        else:
+            pass
+    elif dataset == 'muchocine':
+
+        if split == 'dev':
+            pass
+        else:
+            pass
+    elif dataset == 'tass':
+
+        if split == 'dev':
+            pass
+        else:
+            pass
+            
+    return data
 
 
 def main():
-    for clf_class, kwargs in clf_iterator(5):
-        clf = clf_class(**kwargs)
+    classifiers = load_models()
+    args = parse_args(classifiers)
 
+    print("Initializing classifier...")
+    model, eval_every = init_clf(args)
+    
+    print("Loading data...")
+    ds_train, y_train, ds_devtest, y_devtest = load_dataset(**args['dataset_args'])
 
+    # Model training:
+    print('Training...')
+    history = model.train(
+                ds_train,y_train,
+                eval_every=eval_every,
+                dev=(ds_devtest,y_devtest)
+            )
+
+    # Model evaluation:
+    print('Evaluating results...')
+    y_train_predict = model.predict(ds_train)
+    y_devtest_predict = model.predict(ds_devtest)
+    show_results(y_train_predict,y_train,y_devtest_predict,y_devtest,args,history)
 
 
 if __name__ == '__main__':

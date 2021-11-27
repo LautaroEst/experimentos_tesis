@@ -100,14 +100,11 @@ class RNNClassifier(object):
 
 
     def train(self,ds,y,eval_every=1,dev=None):
-        ds = self.normalize_dataset(ds)
         ds = self.vec.fit_transform(ds)
         pad_idx = self.vec.vocab[self.vec.pad_token]
 
         if dev:
-            ds_dev = self.normalize_dataset(dev[0])
-            ds_dev = self.vec.transform(ds_dev)
-            dev = (ds_dev,dev[1])
+            dev = (self.vec.transform(dev[0]), dev[1])
 
         device = torch.device(self.device_type)    
         model = RNNModel(self.rnn,self.bidirectional,self.embedding_dim,len(self.vec.vocab),
@@ -196,7 +193,6 @@ class RNNClassifier(object):
 
 
     def predict(self,ds):
-        ds = self.normalize_dataset(ds)
         ds = self.vec.transform(ds)
         pad_idx = self.vec.vocab[self.vec.pad_token]
         device = torch.device(self.device_type)

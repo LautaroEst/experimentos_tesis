@@ -1,4 +1,4 @@
-from .utils import normalize_dataset, CatBOWVectorizer
+from .utils import CatBOWVectorizer
 
 import torch
 import torch.nn as nn
@@ -47,7 +47,6 @@ class FeaturesClassifier(object):
         return acc
 
     def train(self,ds,y,eval_every=1,dev=None):
-        ds = normalize_dataset(ds)
         X_train = self.vec.fit_transform(ds,y)
         X_train = torch.from_numpy(X_train).type(torch.float)
         y_train = torch.LongTensor(y)
@@ -56,8 +55,7 @@ class FeaturesClassifier(object):
         train_dataloader = DataLoader(train_dataset,batch_size=self.batch_size,shuffle=True)
 
         if dev:
-            ds_dev = self.normalize_dataset(dev[0])
-            X_dev = self.vec.transform(ds_dev)
+            X_dev = self.vec.transform(dev[0])
             X_dev, y_dev = torch.from_numpy(X_dev).type(torch.float), torch.LongTensor(dev[1])
             dev = (X_dev,y_dev)
 
@@ -139,7 +137,6 @@ class FeaturesClassifier(object):
         return history
             
     def predict(self,ds):
-        ds = self.normalize_dataset(ds)
         X = self.vec.transform(ds)
         X = torch.from_numpy(X).type(torch.float)
         device = torch.device(self.device_type)
