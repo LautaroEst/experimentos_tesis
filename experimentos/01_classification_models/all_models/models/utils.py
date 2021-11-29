@@ -2,6 +2,7 @@ from gensim.models.keyedvectors import KeyedVectors
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 from collections import defaultdict
+from tqdm import tqdm
 
 import torch
 import os
@@ -99,31 +100,43 @@ def load_fasttext(emb_layer,idx2tk,wordvectors,embedding_dim,min_subword,max_sub
     def window_gen(word,min_len,max_len):
         return (word[i-n:i] for n in range(min_len,max_len+1) for i in range(n,len(word)+1))
 
+    found_all = 0
+    found_some = 0
     with torch.no_grad():
-        for idx, tk in idx2tk.items():
+        for idx, tk in tqdm(idx2tk.items()):
             try:
                 emb_layer.weight[idx,:] = torch.from_numpy(wordvectors[tk].copy()).float()
+                found_all += 1
             except KeyError:
                 v = np.zeros(embedding_dim,dtype=float)
+                found_some += 1
                 for w in window_gen(tk,min_subword,max_subword):
                     try:
                         v += wordvectors[w].copy()
                     except KeyError:
-                        v += np.random.randn(embedding_dim)
+                        #v += np.random.randn(embedding_dim)
+                        pass
+                if v.sum() == 0:
+                    v = np.random.randn(embedding_dim)
+                    found_some -= 1
                 emb_layer.weight[idx,:] = torch.from_numpy(v).float()
     
+    print("Found {} words and {} subwords".format(found_all,found_some))
     return emb_layer
 
 
 def load_glove_word2vec(embedding_layer,idx2tk,wordvectors,embedding_dim):
     
+    embeddings_found = 0
     with torch.no_grad():
-        for idx, tk in idx2tk.items():
+        for idx, tk in tqdm(idx2tk.items()):
             try:
                 embedding_layer.weight[idx,:] = torch.from_numpy(wordvectors[tk].copy()).float()
+                embeddings_found += 1
             except KeyError:
-                embedding_layer.weight[idx,:] = torch.randn(embedding_dim)
+                embedding_layer.weight[idx,:] = torch.randn(embedding_dim) 
     
+    print("Found {}/{} ({:.0}%) embeddings".format(embeddings_found,len(idx2tk),embeddings_found/len(idx2tk)*100))
     return embedding_layer
         
 

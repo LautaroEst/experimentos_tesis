@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
+from datasets import load_dataset
+
 
 RANDOM_SEED = 61273812
 MELISA_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/datav2/esp/'
@@ -64,6 +66,27 @@ def load_and_split_melisa(nclasses,devsize):
         )
     df_train, df_dev = train_dev_split(df,devsize,RANDOM_SEED)
     return df_train, df_dev
+
+
+def load_amazon(split='train',nclasses=2):
+    split = 'validation' if split == 'dev' else split
+    dataset = load_dataset("amazon_reviews_multi","es")
+    df = pd.DataFrame(dataset[split]).loc[:,['review_body','review_title','stars']].sample(frac=1,random_state=RANDOM_SEED).reset_index(drop=True)
+    df = df.rename(columns={'review_body':'review_content', 'stars': 'review_rate'})
+    
+    if nclasses == 2:
+        df = df[df['review_rate'] != 3].reset_index(drop=True)
+        df.loc[(df['review_rate'] <= 2),['review_rate']] = 0.
+        df.loc[(df['review_rate'] >= 4),['review_rate']] = 1.
+    elif nclasses == 3:
+        df.loc[(df['review_rate'] <= 2),['review_rate']] = 0.
+        df.loc[(df['review_rate'] >= 4),['review_rate']] = 2.
+        df.loc[df['review_rate'] == 3,['review_rate']] = 1.
+    else:
+        df['review_rate'] = df['review_rate'] - 1
+
+    return df
+
 
 def normalize_dataset(ds):
 

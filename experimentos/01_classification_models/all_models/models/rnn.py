@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.nn.utils.rnn import pack_padded_sequence
 import pandas as pd
-from .utils import VocabVectorizer
+from .utils import VocabVectorizer, init_embeddings
 import numpy as np
 
 
@@ -70,7 +70,7 @@ class RNNClassifier(object):
 
     def __init__(self,nclasses,rnn,bidirectional,frequency_cutoff,max_tokens,max_sent_len,
                 embedding_dim,hidden_size,num_layers,dropout,batch_size,
-                learning_rate,num_epochs,device):
+                learning_rate,num_epochs,device,pretrained_embeddings):
 
         self.embedding_dim = embedding_dim
         self.hidden_size = hidden_size
@@ -83,6 +83,7 @@ class RNNClassifier(object):
         self.device_type = device
         self.rnn = rnn
         self.bidirectional = bidirectional
+        self.pretrained_embeddings = pretrained_embeddings
 
         self.vec = VocabVectorizer(frequency_cutoff,
                         max_tokens,max_sent_len,'<pad>','<unk>')
@@ -109,6 +110,12 @@ class RNNClassifier(object):
         device = torch.device(self.device_type)    
         model = RNNModel(self.rnn,self.bidirectional,self.embedding_dim,len(self.vec.vocab),
                 self.hidden_size,self.nclasses,self.num_layers,self.dropout)
+
+        if self.pretrained_embeddings:
+            model = init_embeddings(model,self.vec.vocab,self.pretrained_embeddings)
+            for param in model.emb.parameters():
+                param.requires_grad = False
+
         model.to(device)
         model.train()
 

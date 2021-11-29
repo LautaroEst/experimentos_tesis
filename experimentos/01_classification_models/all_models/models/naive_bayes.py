@@ -21,7 +21,7 @@ class NaiveBayesClassifier(object):
         
         self.clf = MultinomialNB(alpha=1.,fit_prior=True,class_prior=None)
 
-    def train(self,ds,y):
+    def train(self,ds,y,eval_every=None,dev=None):
         X_train = self.vec.fit_transform(ds)
         y_train = y
         self.clf.fit(X_train,y_train)

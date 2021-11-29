@@ -3,3 +3,4 @@ from .features import FeaturesClassifier
 from .cbow import CBOWClassifier
 from .rnn import RNNClassifier
 from .cnn import CNNClassifier
+from .transformer import TransformerClassifier

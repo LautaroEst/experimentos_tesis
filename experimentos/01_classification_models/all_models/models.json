@@ -24,23 +24,9 @@
             "max_sent_len": 512,
             "embedding_dim": 300,
             "hidden_size": 200,
-            "num_layers": 4,
-            "pretrained_embeddings": null
+            "num_layers": 4
         },
-        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
-    },
-    "cbow_emb": {
-        "clf": "CBOWClassifier",
-        "model_args": {
-            "frequency_cutoff": 1,
-            "max_tokens": 60000,
-            "max_sent_len": 512,
-            "embedding_dim": 300,
-            "hidden_size": 200,
-            "num_layers": 4,
-            "pretrained_embeddings": "word2vec"
-        },
-        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every","pretrained_embeddings"]
     },
     "rnn": {
         "clf": "RNNClassifier",
@@ -54,7 +40,7 @@
             "hidden_size": 200,
             "num_layers": 1
         },
-        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every","pretrained_embeddings"]
     },
     "lstm": {
         "clf": "RNNClassifier",
@@ -68,7 +54,7 @@
             "hidden_size": 200,
             "num_layers": 1
         },
-        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every","pretrained_embeddings"]
     },
     "gru": {
         "clf": "RNNClassifier",
@@ -82,7 +68,7 @@
             "hidden_size": 200,
             "num_layers": 1
         },
-        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every","pretrained_embeddings"]
     },
     "cnn": {
         "clf": "CNNClassifier",
@@ -93,6 +79,41 @@
             "embedding_dim": 300,
             "n_filters": 8,
             "filter_sizes": [3, 5, 7]
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every","pretrained_embeddings"]
+    },
+    "beto-uncased": {
+        "clf": "TransformerClassifier",
+        "model_args": {
+            "model_src": "dccuchile/bert-base-spanish-wwm-uncased"
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    }, 
+    "mbert-sent": {
+        "clf": "TransformerClassifier",
+        "model_args": {
+            "model_src": "nlptown/bert-base-multilingual-uncased-sentiment"
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "xlm-roberta-sent": {
+        "clf": "TransformerClassifier",
+        "model_args": {
+            "model_src": "cardiffnlp/twitter-xlm-roberta-base-sentiment"
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "gtp2-esp": {
+        "clf": "TransformerClassifier",
+        "model_args": {
+            "model_src": "DeepESP/gpt2-spanish"
+        },
+        "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
+    },
+    "electricidad": {
+        "clf": "TransformerClassifier",
+        "model_args": {
+            "model_src": "mrm8488/electricidad-base-discriminator"
         },
         "hyperparams": ["dropout","batch_size","learning_rate","num_epochs","device","eval_every"]
     }

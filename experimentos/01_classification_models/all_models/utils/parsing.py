@@ -17,6 +17,18 @@ def parse_args(classifiers):
     parser.add_argument('--model',type=str,required=True)
     parser.add_argument('--dataset',type=str,required=True)
 
+    parser.add_argument('--frequency_cutoff', type=int, required=False)
+    parser.add_argument('--max_tokens', type=int, required=False)
+    parser.add_argument('--max_sent_len', type=int, required=False)
+    parser.add_argument('--embedding_dim', type=int, required=False)
+    parser.add_argument('--hidden_size', type=int, required=False)
+    parser.add_argument('--num_layers', type=int, required=False)
+    parser.add_argument('--rnn', type=str, required=False)
+    parser.add_argument('--bidirectional', action="store_true", required=False)
+    parser.add_argument('--n_filters', type=int, required=False)
+    parser.add_argument('--filter_sizes', type=int, nargs='+', required=False)
+    parser.add_argument('--ngram_range', type=int, nargs=2, required=False)
+    parser.add_argument('--max_features', type=int, required=False)
     parser.add_argument('--dropout', type=float, required=False)
     parser.add_argument('--weight_decay', type=float, required=False)
     parser.add_argument('--num_epochs', type=int, required=False)
@@ -24,8 +36,12 @@ def parse_args(classifiers):
     parser.add_argument('--learning_rate', type=float, required=False)
     parser.add_argument('--device', type=str, required=False)
     parser.add_argument('--eval_every', type=int, required=False)
+    parser.add_argument('--pretrained_embeddings', type=str, required=False)
 
     args = vars(parser.parse_args())
+
+    if args['pretrained_embeddings'] == "none":
+        args['pretrained_embeddings'] = None
 
     dataset = args['dataset']
     dataset, nclasses = dataset.split('-')
@@ -60,7 +76,11 @@ def parse_args(classifiers):
     clf_args['nclasses'] = nclasses
     for hyp in hyperparams:
         clf_args[hyp] = args.pop(hyp)
-    eval_every = clf_args.pop('eval_every')
+
+    if model_name != "naive_bayes":
+        eval_every = clf_args.pop('eval_every')
+    else:
+        eval_every = None
 
     return dict(
         model_name=model_name,
@@ -103,7 +123,7 @@ Test/Dev MAE: {:.2f}%
 
     now = datetime.now()
     title = now.strftime("%Y-%m-%d-%H-%M-%S")
-    results_dir = os.getcwd() + '/results/{model_name}'.format(**all_args)
+    results_dir = os.getcwd() + '/results_{dataset}/{model_name}'.format(**all_args)
     with open('{}/{}_classification_report.log'.format(results_dir,title),'w') as f:
         f.write(description)
     
@@ -134,23 +154,24 @@ Test/Dev MAE: {:.2f}%
     plt.savefig('{}/{}_confusion_matrix.png'.format(results_dir,title))
 
 
-    with open("{}/{}_history.pkl".format(results_dir,title),'wb') as f:
-        pickle.dump(history,f)
+    if history is not None:
+        with open("{}/{}_history.pkl".format(results_dir,title),'wb') as f:
+            pickle.dump(history,f)
 
-    fig, (ax1, ax2) = plt.subplots(1,2,figsize=(10,6))
-    l = len(history['train_loss'])
-    eval_every = history['eval_every']
-    ax1.plot(np.arange(l)*eval_every,history['train_loss'],label='Train')
-    ax1.plot(np.arange(l)*eval_every,history['dev_loss'],label='Dev/Test')
-    ax1.set_title('Loss',fontsize='xx-large')
-    ax1.grid(True)
-    ax1.legend(loc='upper right',fontsize='x-large')
+        fig, (ax1, ax2) = plt.subplots(1,2,figsize=(10,6))
+        l = len(history['train_loss'])
+        eval_every = history['eval_every']
+        ax1.plot(np.arange(l)*eval_every,history['train_loss'],label='Train')
+        ax1.plot(np.arange(l)*eval_every,history['dev_loss'],label='Dev/Test')
+        ax1.set_title('Loss',fontsize='xx-large')
+        ax1.grid(True)
+        ax1.legend(loc='upper right',fontsize='x-large')
 
-    ax2.plot(np.arange(l)*eval_every,history['train_accuracy'],label='Train')
-    ax2.plot(np.arange(l)*eval_every,history['dev_accuracy'],label='Dev/Test')
-    ax2.set_title('Accuracy',fontsize='xx-large')
-    ax2.grid(True)
-    ax2.legend(loc='lower right',fontsize='x-large')
+        ax2.plot(np.arange(l)*eval_every,history['train_accuracy'],label='Train')
+        ax2.plot(np.arange(l)*eval_every,history['dev_accuracy'],label='Dev/Test')
+        ax2.set_title('Accuracy',fontsize='xx-large')
+        ax2.grid(True)
+        ax2.legend(loc='lower right',fontsize='x-large')
 
-    fig.tight_layout()
-    plt.savefig('{}/{}_history.png'.format(results_dir,title))
+        fig.tight_layout()
+        plt.savefig('{}/{}_history.png'.format(results_dir,title))

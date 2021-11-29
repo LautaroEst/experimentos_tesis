@@ -89,20 +89,17 @@ class CBOWClassifier(object):
         device = torch.device(self.device_type)    
         model = CBOWModel(self.embedding_dim,len(self.vec.vocab),
                 self.hidden_size,self.nclasses,self.num_layers,self.dropout,pad_idx)
-        
-        optimizer = optim.Adam(model.parameters(),lr=self.learning_rate)
-        criterion = nn.CrossEntropyLoss()
 
         if self.pretrained_embeddings:
-            model = init_embeddings(model,self.vocab,self.pretrained_embeddings)
+            model = init_embeddings(model,self.vec.vocab,self.pretrained_embeddings)
             for param in model.emb.parameters():
                 param.requires_grad = False
 
         model.to(device)
         model.train()
 
-        
-        
+        optimizer = optim.Adam(model.parameters(),lr=self.learning_rate)
+        criterion = nn.CrossEntropyLoss()
 
         train_loss_history = []
         train_accuracy_history = []

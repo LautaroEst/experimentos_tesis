@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from .utils import VocabVectorizer
+from .utils import VocabVectorizer, init_embeddings
 import numpy as np
 
 
@@ -44,7 +44,7 @@ class CNNClassifier(object):
 
     def __init__(self,nclasses,frequency_cutoff,max_tokens,max_sent_len,
                 embedding_dim,n_filters,filter_sizes,dropout,batch_size,
-                learning_rate,num_epochs,device):
+                learning_rate,num_epochs,device,pretrained_embeddings):
 
         self.embedding_dim = embedding_dim
         self.n_filters = n_filters
@@ -55,6 +55,7 @@ class CNNClassifier(object):
         self.epochs = num_epochs
         self.nclasses = nclasses
         self.device_type = device
+        self.pretrained_embeddings = pretrained_embeddings
 
         self.vec = VocabVectorizer(frequency_cutoff,
                         max_tokens,max_sent_len,'<pad>','<unk>')
@@ -80,6 +81,12 @@ class CNNClassifier(object):
         device = torch.device(self.device_type)    
         model = CNNModel(len(self.vec.vocab),self.embedding_dim,self.filter_sizes,
                         self.n_filters,self.nclasses,self.dropout)
+
+        if self.pretrained_embeddings:
+            model = init_embeddings(model,self.vec.vocab,self.pretrained_embeddings)
+            for param in model.emb.parameters():
+                param.requires_grad = False
+        
         model.to(device)
         model.train()
 

@@ -22,7 +22,7 @@ class Classifier(object):
         
         self.clf = MultinomialNB(alpha=1.,fit_prior=True,class_prior=None)
 
-    def train(self,ds,y):
+    def train(self,ds,y,eval_every=None):
         ds = self.normalize_dataset(ds)
         X_train = self.vec.fit_transform(ds)
         y_train = y
