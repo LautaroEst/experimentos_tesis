@@ -8,5 +8,10 @@ __pycache__*
 *.bin
 experimentos_old/*
 pretrained_models/*
-experimentos/**/results_*
-experimentos/**/results/*
+experimentos/**/*.pkl
+experimentos_old/**/*.pkl
+experimentos_old/**/*.freqs
+experimentos_old/**/*.tokenized
+experimentos/**/*.freqs
+experimentos/**/*.tokenized
+other_datasets/tass2012/*

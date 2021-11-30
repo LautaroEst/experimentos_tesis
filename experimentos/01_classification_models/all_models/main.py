@@ -63,13 +63,21 @@ def load_dataset(nclasses,dataset,devsize,split):
         y_devtest = df_devtest['review_rate'].values
         data = (ds_train, y_train, ds_devtest, y_devtest)
 
-    elif dataset == 'muchocine':
-        if split == 'dev':
-            pass
-        else:
-            pass
-
     elif dataset == 'tass':
+        if split == 'dev':
+            df_train, df_devtest = load_and_split_tass(nclasses,devsize)
+            ds_train = normalize_dataset(df_train['tweet'])
+        else:
+            df_train = load_tass('train',nclasses)
+            df_devtest = load_tass('test',nclasses)
+
+        ds_train = normalize_dataset(df_train['tweet'])
+        y_train = df_train['label'].values
+        ds_devtest = normalize_dataset(df_devtest['tweet'])
+        y_devtest = df_devtest['label'].values
+        data = (ds_train, y_train, ds_devtest, y_devtest)
+
+    elif dataset == 'muchocine':
         if split == 'dev':
             pass
         else:

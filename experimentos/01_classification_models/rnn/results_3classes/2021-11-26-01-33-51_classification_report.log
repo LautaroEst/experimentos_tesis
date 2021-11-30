@@ -1,0 +1,60 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con una red neuronal recurrente LSTM.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 3
+- Idioma: es
+- Cantidad máxima de palabras en el vocabulario: 60000
+- Frecuencia mínima de cada palabra: 1
+- Cantidad máxima de tokens por review: 512
+- Dimensión de los embeddings: 300
+- Red bidireccional: True
+- Dimensión de las capas ocultas: 200
+- Cantidad de capas ocultas (recurrentes): 1
+- Probabilidad de dropout: 0.2
+- Tamaño del batch: 256
+- Tasa de aprendizaje: 0.0005
+- Cantidad de epochs: 8
+- Dispositivo de entrenamiento: cuda:1
+- Mostrar los datos cada 100 batches.
+
+
+Classification Report (Train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0      0.977     0.981     0.979    184926
+           1      0.935     0.912     0.923     92487
+           2      0.975     0.983     0.979    184955
+
+    accuracy                          0.968    462368
+   macro avg      0.962     0.959     0.960    462368
+weighted avg      0.968     0.968     0.968    462368
+
+
+MAE(%): 3.37
+
+
+Classification Report (Test):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0      0.835     0.880     0.857     10000
+           1      0.533     0.514     0.524      5000
+           2      0.858     0.827     0.843     10000
+
+    accuracy                          0.786     25000
+   macro avg      0.742     0.741     0.741     25000
+weighted avg      0.784     0.786     0.785     25000
+
+
+MAE(%): 3.37
+
+    

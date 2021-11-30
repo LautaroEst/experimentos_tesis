@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: features
+dataset: amazon
+nclasses: 2
+split: dev
+devsize: 0.0
+ngram_range: [1, 2]
+max_features: 50000
+hidden_size: 400
+num_epochs: 2
+batch_size: 256
+learning_rate: 0.0001
+weight_decay: 0.0
+device: cuda
+
+Results:
+
+Train Accuracy: 68.76%
+Test/Dev Accuracy: 68.42%
+Train MAE: 31.24%
+Test/Dev MAE: 31.57%
+    

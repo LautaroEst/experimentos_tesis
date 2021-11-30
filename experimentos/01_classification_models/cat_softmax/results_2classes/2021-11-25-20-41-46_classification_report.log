@@ -1,0 +1,54 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con un modelo Bolsa de Features (catgorías) + 2LayerNet.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 2
+- Idioma: es
+- Rango de los n-gramas: [1, 2]
+- Cantidad máxima de features en el vocabulario: 50000
+- Dimensión de la capa oculta: 400
+- Tamaño del batch: 512
+- Tasa de aprendizaje: 0.0001
+- Cantidad de epochs: 16
+- Weight Decay: 0.0
+- Dispositivo de entrenamiento: cuda:1
+- Mostrar los datos cada 100 batches.
+
+
+Classification Report (Train):
+------------------------------
+
+              precision    recall  f1-score   support
+
+           0      0.811     0.835     0.823    184926
+           1      0.830     0.805     0.817    184955
+
+    accuracy                          0.820    369881
+   macro avg      0.820     0.820     0.820    369881
+weighted avg      0.820     0.820     0.820    369881
+
+    
+MAE(%): 17.99
+
+
+Classification Report (Test):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0      0.756     0.862     0.806     10000
+           1      0.840     0.721     0.776     10000
+
+    accuracy                          0.792     20000
+   macro avg      0.798     0.792     0.791     20000
+weighted avg      0.798     0.792     0.791     20000
+
+
+MAE(%): 17.99
+
+    

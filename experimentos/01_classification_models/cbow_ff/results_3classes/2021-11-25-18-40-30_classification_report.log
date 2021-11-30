@@ -1,0 +1,59 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con un modelo de bolsa de palabras continuo.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 3
+- Idioma: es
+- Cantidad máxima de palabras en el vocabulario: 60000
+- Frecuencia mínima de cada palabra: 1
+- Cantidad máxima de tokens por review: 512
+- Dimensión de los embeddings: 300
+- Dimensión de las capas ocultas: 200
+- Cantidad de capas ocultas: 4
+- Probabilidad de dropout: 0.5
+- Tamaño del batch: 256
+- Tasa de aprendizaje: 0.0005
+- Cantidad de epochs: 8
+- Dispositivo de entrenamiento: cuda:1
+- Mostrar los datos cada 100 batches.
+
+
+Classification Report (Train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0      0.896     0.911     0.903    184926
+           1      0.662     0.603     0.631     92487
+           2      0.886     0.911     0.898    184955
+
+    accuracy                          0.849    462368
+   macro avg      0.815     0.808     0.811    462368
+weighted avg      0.845     0.849     0.847    462368
+
+
+MAE(%): 16.05
+
+
+Classification Report (Test):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0      0.809     0.872     0.839     10000
+           1      0.501     0.455     0.477      5000
+           2      0.837     0.810     0.824     10000
+
+    accuracy                          0.764     25000
+   macro avg      0.716     0.712     0.713     25000
+weighted avg      0.759     0.764     0.760     25000
+
+
+MAE(%): 16.05
+
+    

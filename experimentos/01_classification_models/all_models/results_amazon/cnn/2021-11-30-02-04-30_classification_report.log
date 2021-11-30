@@ -1,0 +1,28 @@
+
+Args:
+
+model_name: cnn
+dataset: amazon
+nclasses: 2
+split: dev
+devsize: 0.0
+max_tokens: 60000
+frequency_cutoff: 1
+max_sent_len: 512
+embedding_dim: 300
+n_filters: 8
+filter_sizes: [3, 5, 7]
+dropout: 0.3
+batch_size: 256
+learning_rate: 0.0005
+num_epochs: 16
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 97.88%
+Test/Dev Accuracy: 89.75%
+Train MAE: 2.12%
+Test/Dev MAE: 10.25%
+    

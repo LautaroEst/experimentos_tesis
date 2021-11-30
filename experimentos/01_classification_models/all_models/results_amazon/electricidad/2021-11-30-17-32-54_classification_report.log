@@ -1,0 +1,22 @@
+
+Args:
+
+model_name: electricidad
+dataset: amazon
+nclasses: 5
+split: test
+devsize: 0.0
+model_src: mrm8488/electricidad-base-discriminator
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 60.77%
+Test/Dev Accuracy: 59.54%
+Train MAE: 43.89%
+Test/Dev MAE: 46.34%
+    

@@ -1,0 +1,30 @@
+
+Args:
+
+model_name: rnn
+dataset: amazon
+nclasses: 3
+split: test
+devsize: 0.0
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+rnn: RNNrelu
+bidirectional: True
+hidden_size: 200
+num_layers: 1
+dropout: 0.5
+batch_size: 256
+learning_rate: 0.0005
+num_epochs: 8
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 86.23%
+Test/Dev Accuracy: 74.42%
+Train MAE: 14.84%
+Test/Dev MAE: 29.78%
+    

@@ -1,0 +1,18 @@
+
+Args:
+
+model_name: naive_bayes
+dataset: amazon
+nclasses: 2
+split: test
+devsize: 0.0
+ngram_range: [1, 3]
+max_features: 100000
+
+Results:
+
+Train Accuracy: 91.39%
+Test/Dev Accuracy: 90.28%
+Train MAE: 8.61%
+Test/Dev MAE: 9.72%
+    

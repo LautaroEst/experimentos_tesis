@@ -1,0 +1,28 @@
+
+Args:
+
+model_name: cbow
+dataset: amazon
+nclasses: 5
+split: test
+devsize: 0.0
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+hidden_size: 200
+num_layers: 4
+dropout: 0.8
+batch_size: 256
+learning_rate: 0.0005
+num_epochs: 16
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 50.11%
+Test/Dev Accuracy: 43.30%
+Train MAE: 59.33%
+Test/Dev MAE: 74.08%
+    

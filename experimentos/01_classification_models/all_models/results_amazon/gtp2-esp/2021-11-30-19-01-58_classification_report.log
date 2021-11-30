@@ -1,0 +1,22 @@
+
+Args:
+
+model_name: gtp2-esp
+dataset: amazon
+nclasses: 2
+split: test
+devsize: 0.0
+model_src: DeepESP/gpt2-spanish
+dropout: 0.05
+batch_size: 2
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 93.91%
+Test/Dev Accuracy: 93.73%
+Train MAE: 6.09%
+Test/Dev MAE: 6.28%
+    

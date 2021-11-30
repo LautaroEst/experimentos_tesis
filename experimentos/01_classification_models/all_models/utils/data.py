@@ -2,10 +2,13 @@ import os
 import pandas as pd
 import numpy as np
 from datasets import load_dataset
+import xml.etree.ElementTree as ET
+import pandas as pd
 
 
 RANDOM_SEED = 61273812
 MELISA_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/datav2/esp/'
+TASS_PATH = os.path.join(os.getcwd(),'../../other_datasets/tass2012')
 # MELISA_PATH = '/'.join(os.getcwd().split('/')) + '/datav2/esp/'
 
 
@@ -86,6 +89,37 @@ def load_amazon(split='train',nclasses=2):
         df['review_rate'] = df['review_rate'] - 1
 
     return df
+
+def load_tass(split='train', nclasses=2):
+    tree = ET.parse(os.path.join(TASS_PATH,'general-' + split + '-tagged.xml'))
+    root = tree.getroot()
+    if nclasses == 2:
+        label2num = {'P+': 1, 'P': 1, 'N': 0, 'N+': 0}
+    elif nclasses == 3:
+        label2num = {'P+': 2, 'P': 2, 'NEU': 1, 'N': 0, 'N+': 0}
+    elif nclasses == 5:
+        label2num = {'P+': 4, 'P': 3, 'NEU': 2, 'N': 1, 'N+': 0}
+    
+    dataset = {'tweet': [], 'label': []}
+    for item in root:
+        tweet = item[2].text
+        label = item[5][0][0].text
+        if (label == 'NONE') or (label == 'NEU' and nclasses == 2):
+            continue
+        num = label2num[label]
+        dataset['tweet'].append(tweet)
+        dataset['label'].append(num)
+
+    dataset = pd.DataFrame.from_dict(dataset)
+    return dataset
+
+def load_and_split_tass(nclasses,devsize):
+    df = load_tass(
+            split='train',
+            nclasses=nclasses
+        )
+    df_train, df_dev = train_dev_split(df,devsize,RANDOM_SEED)
+    return df_train, df_dev
 
 
 def normalize_dataset(ds):

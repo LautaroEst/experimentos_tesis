@@ -1,0 +1,66 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con una red neuronal convolucional.
+La secuencia de vectores es convolucionada por grupos de n_filters 
+filtros, cada uno de ellos con un tamaño distinto determinado por
+el parámetro filter_sizes. Por ejemplo, si n_filters es 2 y 
+filter_sizes es (2,3,4), la red convoluciona la entrada con 2 filtros
+de tamaño 2, 2 de tamaño 3 y 2 de tamaño 4. A eso se le hace un pooling
+por filtro y se concatena todo, resultando en un vector de tamaño
+n_filters * len(filter_sizes), que pasa a un layer lineal.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 3
+- Idioma: es
+- Cantidad máxima de palabras en el vocabulario: 60000
+- Frecuencia mínima de cada palabra: 1
+- Cantidad máxima de tokens por review: 512
+- Dimensión de los embeddings: 300
+- Tamaño de los filtros: [3, 5, 7]
+- Cantidad de canales por filtro: 8
+- Probabilidad de dropout: 0.2
+- Tamaño del batch: 256
+- Tasa de aprendizaje: 0.0005
+- Cantidad de epochs: 8
+- Dispositivo de entrenamiento: cuda:1
+- Mostrar los datos cada 100 batches.
+
+
+Classification Report (Train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0      0.881     0.922     0.901    184926
+           1      0.674     0.544     0.602     92487
+           2      0.873     0.917     0.894    184955
+
+    accuracy                          0.844    462368
+   macro avg      0.809     0.794     0.799    462368
+weighted avg      0.837     0.844     0.839    462368
+
+
+MAE(%): 16.74
+
+
+Classification Report (Test):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0      0.803     0.878     0.839     10000
+           1      0.505     0.389     0.439      5000
+           2      0.826     0.843     0.834     10000
+
+    accuracy                          0.766     25000
+   macro avg      0.711     0.703     0.704     25000
+weighted avg      0.752     0.766     0.757     25000
+
+
+MAE(%): 16.74
+
+    

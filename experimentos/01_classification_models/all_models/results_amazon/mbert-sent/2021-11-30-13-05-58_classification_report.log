@@ -1,0 +1,22 @@
+
+Args:
+
+model_name: mbert-sent
+dataset: amazon
+nclasses: 2
+split: test
+devsize: 0.0
+model_src: nlptown/bert-base-multilingual-uncased-sentiment
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 95.17%
+Test/Dev Accuracy: 93.97%
+Train MAE: 4.83%
+Test/Dev MAE: 6.02%
+    

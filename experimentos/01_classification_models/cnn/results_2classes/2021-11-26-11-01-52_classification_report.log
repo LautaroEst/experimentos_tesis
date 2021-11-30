@@ -1,0 +1,61 @@
+
+
+
+Descripción del experimento:
+----------------------------
+
+Modelo de clasificación con una red neuronal convolucional.
+La secuencia de vectores es convolucionada por grupos de n_filters 
+filtros, cada uno de ellos con un tamaño distinto determinado por
+el parámetro filter_sizes. Por ejemplo, si n_filters es 2 y 
+filter_sizes es (2,3,4), la red convoluciona la entrada con 2 filtros
+de tamaño 2, 2 de tamaño 3 y 2 de tamaño 4. A eso se le hace un pooling
+por filtro y se concatena todo, resultando en un vector de tamaño
+n_filters * len(filter_sizes), que pasa a un layer lineal.
+
+Argumentos del entrenamiento utilizados:
+- Cantidad de clases: 2
+- Idioma: es
+- Cantidad máxima de palabras en el vocabulario: 60000
+- Frecuencia mínima de cada palabra: 1
+- Cantidad máxima de tokens por review: 512
+- Dimensión de los embeddings: 300
+- Tamaño de los filtros: [3, 5, 7]
+- Cantidad de canales por filtro: 8
+- Probabilidad de dropout: 0.2
+- Tamaño del batch: 256
+- Tasa de aprendizaje: 0.0005
+- Cantidad de epochs: 8
+- Dispositivo de entrenamiento: cuda:1
+- Mostrar los datos cada 100 batches.
+- Proporción utilizada para dev: 0.05
+
+
+Classification Report (Train):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.98      0.97      0.98    175672
+           1       0.97      0.98      0.98    175714
+
+    accuracy                           0.98    351386
+   macro avg       0.98      0.98      0.98    351386
+weighted avg       0.98      0.98      0.98    351386
+
+
+
+Classification Report (Dev):
+------------------------------
+    
+              precision    recall  f1-score   support
+
+           0       0.94      0.93      0.94      9254
+           1       0.93      0.94      0.94      9241
+
+    accuracy                           0.94     18495
+   macro avg       0.94      0.94      0.94     18495
+weighted avg       0.94      0.94      0.94     18495
+
+
+    
