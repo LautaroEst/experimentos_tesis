@@ -1,0 +1,30 @@
+
+Args:
+
+model_name: lstm
+dataset: melisa
+nclasses: 2
+split: dev
+devsize: 0.05
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+rnn: LSTM
+bidirectional: True
+hidden_size: 200
+num_layers: 1
+dropout: 0.0
+batch_size: 256
+learning_rate: 0.0005
+num_epochs: 16
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 99.93%
+Test/Dev Accuracy: 95.46%
+Train MAE: 0.07%
+Test/Dev MAE: 4.54%
+    

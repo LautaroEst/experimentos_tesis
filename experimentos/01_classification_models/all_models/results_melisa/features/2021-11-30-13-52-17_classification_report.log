@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: features
+dataset: melisa
+nclasses: 2
+split: dev
+devsize: 0.05
+ngram_range: [1, 2]
+max_features: 50000
+hidden_size: 400
+num_epochs: 4
+batch_size: 1024
+learning_rate: 0.0001
+weight_decay: 0.0
+device: cuda
+
+Results:
+
+Train Accuracy: 80.97%
+Test/Dev Accuracy: 81.60%
+Train MAE: 19.03%
+Test/Dev MAE: 18.40%
+    

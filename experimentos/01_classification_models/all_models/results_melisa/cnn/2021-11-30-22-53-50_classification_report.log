@@ -1,0 +1,28 @@
+
+Args:
+
+model_name: cnn
+dataset: melisa
+nclasses: 5
+split: test
+devsize: 0.0
+max_tokens: 60000
+frequency_cutoff: 1
+max_sent_len: 512
+embedding_dim: 300
+n_filters: 8
+filter_sizes: [3, 5, 7]
+dropout: 0.5
+batch_size: 256
+learning_rate: 0.0005
+num_epochs: 10
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 63.42%
+Test/Dev Accuracy: 56.57%
+Train MAE: 41.12%
+Test/Dev MAE: 52.73%
+    

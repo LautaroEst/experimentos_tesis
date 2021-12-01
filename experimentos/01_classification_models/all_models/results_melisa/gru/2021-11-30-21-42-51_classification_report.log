@@ -1,0 +1,30 @@
+
+Args:
+
+model_name: gru
+dataset: melisa
+nclasses: 3
+split: test
+devsize: 0.0
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+rnn: GRU
+bidirectional: False
+hidden_size: 200
+num_layers: 1
+dropout: 0.8
+batch_size: 256
+learning_rate: 0.0005
+num_epochs: 3
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 85.73%
+Test/Dev Accuracy: 80.49%
+Train MAE: 15.05%
+Test/Dev MAE: 21.78%
+    

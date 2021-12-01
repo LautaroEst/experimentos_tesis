@@ -1,0 +1,18 @@
+
+Args:
+
+model_name: naive_bayes
+dataset: melisa
+nclasses: 2
+split: test
+devsize: 0.0
+ngram_range: [1, 3]
+max_features: 100000
+
+Results:
+
+Train Accuracy: 91.75%
+Test/Dev Accuracy: 89.81%
+Train MAE: 8.25%
+Test/Dev MAE: 10.18%
+    
