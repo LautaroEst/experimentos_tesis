@@ -1,0 +1,30 @@
+
+Args:
+
+model_name: cnn
+dataset: tass
+nclasses: 2
+split: dev
+devsize: 0.1
+max_tokens: 60000
+frequency_cutoff: 1
+max_sent_len: 512
+embedding_dim: 300
+n_filters: 8
+filter_sizes: [3, 5, 7]
+dropout: 0.8
+batch_size: 256
+learning_rate: 0.0001
+num_epochs: 400
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 99.87%
+Test/Dev Accuracy: 71.01%
+Train f1-score: 99.87%
+Test/Dev f1-score: 69.29%
+Train MAE: 0.13%
+Test/Dev MAE: 28.99%
+    

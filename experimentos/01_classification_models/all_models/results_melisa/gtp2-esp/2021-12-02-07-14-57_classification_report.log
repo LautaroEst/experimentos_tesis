@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: gtp2-esp
+dataset: melisa
+nclasses: 5
+split: test
+devsize: 0.0
+model_src: DeepESP/gpt2-spanish
+dropout: 0.05
+batch_size: 2
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 67.91%
+Test/Dev Accuracy: 64.38%
+Train f1-score: 67.91%
+Test/Dev f1-score: 64.51%
+Train MAE: 36.08%
+Test/Dev MAE: 42.14%
+    

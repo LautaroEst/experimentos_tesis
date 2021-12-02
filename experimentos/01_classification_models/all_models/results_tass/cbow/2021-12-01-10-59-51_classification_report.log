@@ -1,0 +1,30 @@
+
+Args:
+
+model_name: cbow
+dataset: tass
+nclasses: 2
+split: dev
+devsize: 0.1
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+hidden_size: 200
+num_layers: 4
+dropout: 0.0
+batch_size: 256
+learning_rate: 0.0001
+num_epochs: 64
+device: cuda
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 100.00%
+Test/Dev Accuracy: 66.47%
+Train f1-score: 100.00%
+Test/Dev f1-score: 64.44%
+Train MAE: 0.00%
+Test/Dev MAE: 33.53%
+    
