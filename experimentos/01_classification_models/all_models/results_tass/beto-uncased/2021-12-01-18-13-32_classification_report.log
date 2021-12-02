@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: beto-uncased
+dataset: tass
+nclasses: 5
+split: test
+devsize: 0.0
+model_src: dccuchile/bert-base-spanish-wwm-uncased
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 61.85%
+Test/Dev Accuracy: 56.57%
+Train f1-score: 54.75%
+Test/Dev f1-score: 40.57%
+Train MAE: 47.02%
+Test/Dev MAE: 66.21%
+    

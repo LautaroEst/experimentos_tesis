@@ -146,6 +146,7 @@ def init_embeddings(model,vocab,embeddings):
     idx2tk.pop(0)
     idx2tk.pop(1)
 
+    embeddings, finetune = embeddings.split('-')
     wordvectors_file_vec = embeddings_file_paths[embeddings]
 
     embedding_dim = 300

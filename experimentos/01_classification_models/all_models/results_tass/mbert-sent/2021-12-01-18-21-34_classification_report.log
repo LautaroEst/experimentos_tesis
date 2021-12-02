@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: mbert-sent
+dataset: tass
+nclasses: 5
+split: test
+devsize: 0.0
+model_src: nlptown/bert-base-multilingual-uncased-sentiment
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 59.57%
+Test/Dev Accuracy: 55.43%
+Train f1-score: 49.60%
+Test/Dev f1-score: 40.02%
+Train MAE: 49.34%
+Test/Dev MAE: 63.36%
+    

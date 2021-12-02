@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: electricidad
+dataset: tass
+nclasses: 5
+split: test
+devsize: 0.0
+model_src: mrm8488/electricidad-base-discriminator
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 55.58%
+Test/Dev Accuracy: 54.14%
+Train f1-score: 41.08%
+Test/Dev f1-score: 32.36%
+Train MAE: 54.18%
+Test/Dev MAE: 66.13%
+    

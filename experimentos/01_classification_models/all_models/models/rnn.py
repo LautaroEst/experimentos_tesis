@@ -113,8 +113,10 @@ class RNNClassifier(object):
 
         if self.pretrained_embeddings:
             model = init_embeddings(model,self.vec.vocab,self.pretrained_embeddings)
-            for param in model.emb.parameters():
-                param.requires_grad = False
+            if "finetune" not in self.pretrained_embeddings:
+                print("Embeddings fijos!")
+                for param in model.emb.parameters():
+                    param.requires_grad = False
 
         model.to(device)
         model.train()

@@ -1,0 +1,22 @@
+
+Args:
+
+model_name: mbert-sent
+dataset: melisa
+nclasses: 3
+split: test
+devsize: 0.0
+model_src: nlptown/bert-base-multilingual-uncased-sentiment
+dropout: 0.05
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 84.94%
+Test/Dev Accuracy: 81.30%
+Train MAE: 15.72%
+Test/Dev MAE: 20.56%
+    

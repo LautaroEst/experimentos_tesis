@@ -4,7 +4,7 @@ import os
 from matplotlib import pyplot as plt
 
 import numpy as np
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, f1_score
 import pickle
 
 def parse_args(classifiers):
@@ -111,12 +111,16 @@ Results:
 
 Train Accuracy: {:.2f}%
 Test/Dev Accuracy: {:.2f}%
+Train f1-score: {:.2f}%
+Test/Dev f1-score: {:.2f}%
 Train MAE: {:.2f}%
 Test/Dev MAE: {:.2f}%
     """.format(
         '\n'.join(["{}: {}".format(key,val) for key, val in all_args.items()]),
         calculate_acc(y_train_pred,y_train),
         calculate_acc(y_devtest_pred,y_devtest),
+        f1_score(y_train,y_train_pred,average='macro')*100,
+        f1_score(y_devtest,y_devtest_pred,average='macro')*100,
         calculate_mae(y_train_pred,y_train),
         calculate_mae(y_devtest_pred,y_devtest)
     )

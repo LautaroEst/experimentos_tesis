@@ -8,7 +8,7 @@ import pandas as pd
 
 RANDOM_SEED = 61273812
 MELISA_PATH = '/'.join(os.getcwd().split('/')[:-3]) + '/datav2/esp/'
-TASS_PATH = os.path.join(os.getcwd(),'../../other_datasets/tass2012')
+TASS_PATH = os.path.join(os.getcwd(),'../../../other_datasets/tass2012')
 # MELISA_PATH = '/'.join(os.getcwd().split('/')) + '/datav2/esp/'
 
 

@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: gtp2-esp
+dataset: tass
+nclasses: 5
+split: test
+devsize: 0.0
+model_src: DeepESP/gpt2-spanish
+dropout: 0.0
+batch_size: 2
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 53.14%
+Test/Dev Accuracy: 58.88%
+Train f1-score: 42.66%
+Test/Dev f1-score: 38.55%
+Train MAE: 69.42%
+Test/Dev MAE: 69.99%
+    

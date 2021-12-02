@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: xlm-roberta-sent
+dataset: tass
+nclasses: 2
+split: test
+devsize: 0.0
+model_src: cardiffnlp/twitter-xlm-roberta-base-sentiment
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 92.24%
+Test/Dev Accuracy: 85.00%
+Train f1-score: 92.20%
+Test/Dev f1-score: 84.95%
+Train MAE: 7.76%
+Test/Dev MAE: 15.00%
+    
