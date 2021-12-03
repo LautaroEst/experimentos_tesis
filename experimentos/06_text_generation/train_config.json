@@ -1,0 +1,34 @@
+{
+    "dataset": "melisa",
+    "devsize": 0.05,
+    "model": {
+        "name": "lstm"
+    },
+    "src_tokenizer": {
+        "name": "word_tokenizer",
+        "freq_cutoff": 1,
+        "max_tokens": 60000,
+        "max_sent_len": 512,
+        "pad_token": "[PAD]",
+        "unk_token": "[UNK]",
+        "start_token": "[BOS]",
+        "end_token": "[EOS]"
+    },
+    "tgt_tokenizer": {
+        "name": "word_tokenizer",
+        "freq_cutoff": 1,
+        "max_tokens": 60000,
+        "max_sent_len": 512,
+        "pad_token": "[PAD]",
+        "unk_token": "[UNK]",
+        "start_token": "[BOS]",
+        "end_token": "[EOS]"
+    },
+    "train_kwargs": {
+        "max_epochs": 10,
+        "train_batch_size": 32,
+        "dev_batch_size": 128,
+        "learning_rate": 1e-3,
+        "patience": 3
+    }
+}

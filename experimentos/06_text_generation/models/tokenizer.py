@@ -1,13 +1,15 @@
 from collections import defaultdict
 
+import torch
 
-class VocabVectorizer(object):
+
+class WordTokenizer(object):
 
     pattern = r"(\w+|[\.,!\(\)\"\-:\?/%;¡\$'¿\\]|\d+)"
 
     def __init__(
-            self,freq_cutoff,max_tokens,
-            max_sent_len,pad_token,unk_token
+            self,freq_cutoff,max_tokens,max_sent_len,
+            pad_token,unk_token,start_token,end_token
         ):
 
         self.freq_cutoff = freq_cutoff
@@ -15,6 +17,8 @@ class VocabVectorizer(object):
         self.max_sent_len = max_sent_len
         self.pad_token = pad_token
         self.unk_token = unk_token
+        self.start_token = start_token
+        self.end_token = end_token
         self.vocab = None
 
     def create_vocabulary(self,corpus):
@@ -34,22 +38,40 @@ class VocabVectorizer(object):
     def pre_tokenize(self,ds):
         return ds.str.findall(self.pattern)
 
-    def fit_transform(self,ds):
-        corpus = self.pre_tokenize(ds)
-        vocab = self.create_vocabulary(corpus)
-        unk_idx = vocab[self.unk_token]
-        max_sent_len = self.max_sent_len
-        ds = corpus.apply(lambda sent: [vocab.get(tk,unk_idx) for tk in sent[:max_sent_len]])
-        return ds
-    
-    def fit(self,ds):
-        corpus = self.pre_tokenize(ds)
-        vocab = self.create_vocabulary(corpus)
-        self.vocab = vocab
+    @classmethod
+    def from_dataseries(cls,ds,**kwargs):
+        tokenizer = cls(**kwargs)
+        ds = tokenizer.pre_tokenize(ds)
+        _ = tokenizer.create_vocabulary(ds)
+        return tokenizer
 
-    def transform(self,ds):
-        ds = self.pre_tokenize(ds)
+    def __call__(self,ds):
+
         vocab = self.vocab
         unk_idx = vocab[self.unk_token]
-        ds = ds.apply(lambda sent: [vocab.get(tk,unk_idx) for tk in sent])
-        return ds
+        pad_idx = vocab[self.pad_token]
+        max_sent_len = self.max_sent_len
+
+        ds = self.pre_tokenize(ds)
+
+        encoded_input = {
+            "input_ids": [],
+            "attention_mask": []
+        }
+
+        max_len = ds.str.len().max()
+        for sent in ds:
+            input_ids = []
+            attention_mask = []
+            for tk in sent[:max_sent_len]:
+                input_ids.append(vocab.get(tk,unk_idx))
+                attention_mask.append(1)
+            input_ids.extend([pad_idx] * (max_len-len(sent)))
+            attention_mask.extend([0] * (max_len-len(sent)))
+            encoded_input['input_ids'].append(input_ids)
+            encoded_input['attention_mask'].append(attention_mask)
+
+        encoded_input['input_ids'] = torch.LongTensor(encoded_input['input_ids'])
+        encoded_input['attention_mask'] = torch.LongTensor(encoded_input['attention_mask'])
+
+        return encoded_input
