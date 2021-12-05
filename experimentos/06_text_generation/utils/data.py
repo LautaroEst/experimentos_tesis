@@ -7,6 +7,7 @@ import pandas as pd
 
 RANDOM_SEED = 61273812
 MELISA_PATH = '/'.join(os.getcwd().split('/')[:-2]) + '/datav2/esp/'
+# MELISA_PATH = '/'.join(os.getcwd().split('/')) + '/datav2/esp/'
 
 
 def get_train_dev_idx(N,dev_size=.2,random_state=0):

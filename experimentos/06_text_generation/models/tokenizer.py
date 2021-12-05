@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 import torch
+from torch._C import Value
 
 
 class WordTokenizer(object):
@@ -29,9 +30,11 @@ class WordTokenizer(object):
                 word_freq[word] += 1
         valid_words = [w for w, v in word_freq.items() if v >= fc]
         top_k_words = sorted(valid_words, key=lambda w: word_freq[w], reverse=True)[:self.max_tokens-2]
-        vocab = {word: idx for idx, word in enumerate(top_k_words,2)}
+        vocab = {word: idx for idx, word in enumerate(top_k_words,4)}
         vocab[self.pad_token] = 0
         vocab[self.unk_token] = 1
+        vocab[self.start_token] = 2
+        vocab[self.end_token] = 3
         self.vocab = vocab
         return vocab
 
@@ -50,28 +53,26 @@ class WordTokenizer(object):
         vocab = self.vocab
         unk_idx = vocab[self.unk_token]
         pad_idx = vocab[self.pad_token]
+        start_idx = vocab[self.start_token]
+        end_idx = vocab[self.end_token]
         max_sent_len = self.max_sent_len
 
         ds = self.pre_tokenize(ds)
 
-        encoded_input = {
-            "input_ids": [],
-            "attention_mask": []
-        }
-
-        max_len = ds.str.len().max()
+        inputs_ids = []
+        max_len = min([ds.str.len().max()+2,max_sent_len])
         for sent in ds:
-            input_ids = []
-            attention_mask = []
-            for tk in sent[:max_sent_len]:
-                input_ids.append(vocab.get(tk,unk_idx))
-                attention_mask.append(1)
-            input_ids.extend([pad_idx] * (max_len-len(sent)))
-            attention_mask.extend([0] * (max_len-len(sent)))
-            encoded_input['input_ids'].append(input_ids)
-            encoded_input['attention_mask'].append(attention_mask)
+            input_ids = [vocab.get(tk,unk_idx) for tk in sent[:(max_sent_len-2)]]
+            input_ids.insert(0,start_idx)
+            input_ids.append(end_idx)
+            input_ids.extend([pad_idx] * (max_len-len(input_ids)))
+            inputs_ids.append(input_ids)
 
-        encoded_input['input_ids'] = torch.LongTensor(encoded_input['input_ids'])
-        encoded_input['attention_mask'] = torch.LongTensor(encoded_input['attention_mask'])
+        input_ids = torch.LongTensor(inputs_ids)
+        attention_mask = (input_ids != pad_idx).float()
+        encoded_input = {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask
+        }
 
         return encoded_input

@@ -31,7 +31,7 @@
         "max_epochs": 10,
         "train_batch_size": 128,
         "dev_batch_size": 256,
-        "learning_rate": 1e-3,
+        "learning_rate": 0.001,
         "patience": 3,
         "train_eval_every": 100,
         "dev_eval_every": 1000
