@@ -1,0 +1,45 @@
+{
+    "dataset": "amazon",
+    "model": {
+        "name": "lstm",
+        "embedding_dim": 300,
+        "hidden_size": 200,
+        "dropout": 0.2
+    },
+    "src_tokenizer": {
+        "name": "word_tokenizer",
+        "freq_cutoff": 1,
+        "max_tokens": 60000,
+        "max_sent_len": 512,
+        "pad_token": "[PAD]",
+        "unk_token": "[UNK]",
+        "start_token": "[BOS]",
+        "end_token": "[EOS]"
+    },
+    "tgt_tokenizer": {
+        "name": "word_tokenizer",
+        "freq_cutoff": 1,
+        "max_tokens": 60000,
+        "max_sent_len": 512,
+        "pad_token": "[PAD]",
+        "unk_token": "[UNK]",
+        "start_token": "[BOS]",
+        "end_token": "[EOS]"
+    },
+    "train_kwargs": {
+        "max_epochs": 10,
+        "train_batch_size": 32,
+        "dev_batch_size": 64,
+        "learning_rate": 0.0005,
+        "patience": 10,
+        "train_eval_every": 100,
+        "dev_eval_every": 1000
+    },
+    "eval_kwargs": {
+        "max_len_of_pred_sent": 10,
+        "eval_in": [
+            "train",
+            "dev"
+        ]
+    }
+}
