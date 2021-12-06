@@ -7,14 +7,16 @@ from torch import optim
 import utils
 from utils.data import load_melisa, load_amazon, load_and_split_melisa, normalize_dataset
 from utils.io import parse_args
-from models import init_lstm_model, WordTokenizer
+from models import init_lstm_model, WordTokenizer, greedy_decoding
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 import pandas as pd
 import torch
 
 
-def load_dataset(dataset,devsize):
+def load_data(dataset,devsize):
     print('Loading dataset...')
     if dataset == 'melisa':
             df_train, df_dev = load_and_split_melisa(devsize)
@@ -109,6 +111,8 @@ def train_model(
     dev_batch_size = kwargs.pop('dev_batch_size')
     train_eval_every = kwargs.pop('train_eval_every')
     dev_eval_every = kwargs.pop('dev_eval_every')
+    patience = kwargs.pop('patience')
+    checkpoint_path = str(os.path.join(results_dir,'checkpoint.pkl'))
     
     optimizer = optim.Adam(model.parameters(),lr=lr)
 
@@ -116,7 +120,7 @@ def train_model(
     dev_ppl_history = []
     
     num_batches = len(torch.arange(len(data['src_train'])).split(train_batch_size))
-    cum_train_ppl = cum_num_examples = total_words_to_predict = e = 0
+    cum_train_ppl = cum_num_examples = total_words_to_predict = patience_count = e = 0
     start_time = time()
     while e < max_epochs:
         for i, batch in batch_iter(
@@ -150,21 +154,66 @@ def train_model(
                 print('Dev evaluation...')
                 dev_ppl = evaluate_ppl(model,data['src_dev'],data['tgt_dev'],src_tokenizer,tgt_tokenizer,dev_batch_size)
                 print('Dev avg. ppl: {:.5f}'.format(dev_ppl))
+
+                is_better = len(dev_ppl_history) == 0 or dev_ppl < min(dev_ppl_history)
                 dev_ppl_history.append(dev_ppl)
-                
+
+                if is_better:
+                    patience_count = 0
+                    save_checkpoint(model,optimizer,checkpoint_path)
+                else:
+                    patience_count += 1
+                    print("Valor de la paciencia: #{}".format(patience_count))
+                    if patience_count == patience:
+                        break
+        
+        if patience_count == patience:
+            print("Se agotó la paciencia!")
+            break
+
         e += 1
 
     end_time = time()
-    print("Duración del entrenamiento: {:.2f}".format((end_time-start_time) / 3600))
+    print("Duración del entrenamiento: {:.2f} horas".format((end_time-start_time) / 3600))
+    history = dict(
+        train_history=train_ppl_history,
+        dev_history=dev_ppl_history,
+        train_eval_every=train_eval_every,
+        dev_eval_every=dev_eval_every,
 
-    with open(os.path.join(results_dir,'train_ppl_history.pkl'), "wb") as f:
-        pickle.dump(train_ppl_history,f)
-    with open(os.path.join(results_dir,'dev_ppl_history.pkl'), "wb") as f:
-        pickle.dump(dev_ppl_history,f)
+    )
+    return history
+    
 
-    model.save(os.path.join(results_dir,'model.pkl'))
-    torch.save(model.state_dict(),os.path.join(results_dir,'model_state_dict.pkl'))
-    torch.save(optimizer.state_dict(),os.path.join(results_dir,'optimizer_state_dict.pkl'))
+def plot_and_save_ppl(history,results_dir):
+    with open(os.path.join(results_dir,'ppl_history.pkl'), "wb") as f:
+        pickle.dump(history,f)
+
+    fig, ax = plt.subplots(1,1,figsize=(10,6))
+    train_ppl = history['train_history']
+    dev_ppl = history['dev_history']
+    train_eval_every = history['train_eval_every']
+    dev_eval_every = history['dev_eval_every']
+    ax.plot(np.arange(len(train_ppl))*train_eval_every,train_ppl,label='Train Perplexity')
+    ax.plot(np.arange(len(dev_ppl))*dev_eval_every,dev_ppl,label='Dev Perplexity')
+    ax.set_title('Perplexity history',fontsize='xx-large')
+    ax.grid(True)
+    ax.set_yscale('log')
+    ax.legend(loc='upper right',fontsize='x-large')
+
+    fig.tight_layout()
+    plt.savefig(os.path.join(results_dir,'ppl_history.png'))
+
+
+
+def save_checkpoint(model,optimizer,path):
+    params = {
+        'model_state_dict': model.state_dict(),
+        'src_tokenizer': model.encoder.tokenizer,
+        'tgt_tokenizer': model.decoder.tokenizer,
+        'optimizer_state_dict': optimizer.state_dict()
+    }
+    torch.save(params,path)
 
 
 
@@ -197,6 +246,17 @@ def evaluate_ppl(model,src_dev,tgt_dev,src_tokenizer,tgt_tokenizer,batch_size=32
     return ppl
 
 
+def save_sents_to_file(tgt_sents,pred_sents,path):
+
+    df = pd.concat([
+        pd.Series(tgt_sents),
+        pd.Series(pred_sents)
+    ], ignore_index=True, axis=1)
+    df = df.rename(columns={0: "True", 1: "Predicted"})
+    df.to_csv(path,index=False)
+
+
+
 def main():
 
     # Read args
@@ -204,7 +264,7 @@ def main():
         
     # Dataset loading:
     dataset_args = args.pop('dataset_args')
-    data = load_dataset(**dataset_args)
+    data = load_data(**dataset_args)
 
     # Model Initialization
     model_kwargs = args.pop('model_kwargs')
@@ -226,7 +286,7 @@ def main():
     )
 
     # Training
-    train_model(
+    history = train_model(
         model=model,
         data=data,
         src_tokenizer=src_tokenizer,
@@ -234,7 +294,23 @@ def main():
         results_dir=args['results_dir'],
         **args['train_kwargs']
     )
+
+    plot_and_save_ppl(history,args['results_dir'])
+
+    print("Evaluating results...")
+    eval_splits = args['eval_kwargs'].pop('eval_in')
+    max_len_of_pred_sent = args['eval_kwargs'].pop('max_len_of_pred_sent')
+    eval_data = {}
+    if "train" in eval_splits:
+        eval_data['train'] = (data.pop("src_train"),data.pop("tgt_train"))
+    if "dev" in eval_splits:
+        eval_data['dev'] = (data.pop("src_dev"),data.pop("tgt_dev"))
     
+    for split, (src_sents, target_sents) in eval_data.items():
+        pred_sents = greedy_decoding(model,src_sents,tgt_tokenizer,max_len_of_pred_sent)
+        sents_path_file = os.path.join(args['results_dir'],"{}_results.csv".format(split))
+        target_sents = [tgt_tokenizer.tokenize(sent) for sent in target_sents]
+        save_sents_to_file(target_sents,pred_sents,sents_path_file)
 
 
 

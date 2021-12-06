@@ -16,15 +16,20 @@ class MultiplicativeCrossAttention(nn.Module):
         return hidden_with_attn  
 
 def main():
-    o = [torch.arange(32).view(4,8), torch.arange(32).view(4,8)*2, torch.arange(32).view(4,8)*3]
-    # seq = torch.cat([o_t.unsqueeze(1) for o_t in o],dim=1)#.view(2,3,4)
+    # o = [torch.arange(32).view(4,8), torch.arange(32).view(4,8)*2, torch.arange(32).view(4,8)*3]
+    # # seq = torch.cat([o_t.unsqueeze(1) for o_t in o],dim=1)#.view(2,3,4)
+    # # print(seq)
+    # seq = torch.cat(o,dim=1).view(4,3,8)
     # print(seq)
-    seq = torch.cat(o,dim=1).view(4,3,8)
-    print(seq)
-    tgt_seq = torch.tensor([[0,2,2],[3,1,1],[1,1,4],[0,1,0]]).long().unsqueeze(-1)
-    p = torch.gather(seq,index=tgt_seq,dim=-1)
-    print(seq.size(), tgt_seq.size())
-    print(p)
+    # tgt_seq = torch.tensor([[0,2,2],[3,1,1],[1,1,4],[0,1,0]]).long().unsqueeze(-1)
+    # p = torch.gather(seq,index=tgt_seq,dim=-1)
+    # print(seq.size(), tgt_seq.size())
+    # print(p)
+
+    # t = torch.randint(0,4,(1,4,5))
+    # print(t.max(dim=2).indices)
+    t = torch.tensor([[1.]])
+    print(t.item())
 
     # h_n = torch.arange(24).view(2,3,4)
     # print(h_n)

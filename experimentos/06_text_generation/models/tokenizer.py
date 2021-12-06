@@ -1,4 +1,5 @@
 from collections import defaultdict
+import re
 
 import torch
 from torch._C import Value
@@ -21,6 +22,7 @@ class WordTokenizer(object):
         self.start_token = start_token
         self.end_token = end_token
         self.vocab = None
+        self.inv_vocab = None
 
     def create_vocabulary(self,corpus):
         word_freq = defaultdict(lambda : 0)
@@ -36,7 +38,17 @@ class WordTokenizer(object):
         vocab[self.start_token] = 2
         vocab[self.end_token] = 3
         self.vocab = vocab
+        self.inv_vocab = {idx:tk for tk, idx in vocab.items()}
         return vocab
+
+    def ids_to_tokens(self,ids):
+        return [self.inv_vocab[idx] for idx in ids]
+
+    def tokenize(self,string):
+        vocab = self.vocab
+        unk_token = self.unk_token
+        pattern = re.compile(self.pattern)
+        return [tk if tk in vocab else unk_token for tk in pattern.findall(string)]
 
     def pre_tokenize(self,ds):
         return ds.str.findall(self.pattern)
