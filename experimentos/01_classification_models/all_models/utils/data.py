@@ -122,6 +122,41 @@ def load_and_split_tass(nclasses,devsize):
     return df_train, df_dev
 
 
+def load_cine(nclasses,split='train'):
+    CINE_RNDM_SEED = 2374812
+    rs = np.random.RandomState(CINE_RNDM_SEED)
+    dataset = load_dataset("muchocine")['train']
+    print(dataset)
+    df = pd.DataFrame(dataset).loc[:,['review_body','review_summary','star_rating']]
+    df = df.rename(columns={'review_body':'review_content', 'star_rating': 'review_rate', 'review_summary': 'review_title'})
+    
+    if nclasses == 2:
+        df = df[df['review_rate'] != 3].reset_index(drop=True)
+        df.loc[(df['review_rate'] <= 2),['review_rate']] = 0.
+        df.loc[(df['review_rate'] >= 4),['review_rate']] = 1.
+    elif nclasses == 3:
+        df.loc[(df['review_rate'] <= 2),['review_rate']] = 0.
+        df.loc[(df['review_rate'] >= 4),['review_rate']] = 2.
+        df.loc[df['review_rate'] == 3,['review_rate']] = 1.
+    else:
+        df['review_rate'] = df['review_rate'] - 1
+
+
+    N = len(df) 
+    N_train, N_dev = int(N*0.85), int(N*0.05)
+    indices = rs.permutation(N)
+
+    if split == 'train':
+        df_train = df.iloc[indices[:N_train],:].reset_index(drop=True)
+        return df_train
+    elif split == 'dev':
+        df_dev = df.iloc[indices[N_train:N_train+N_dev],:].reset_index(drop=True)
+        return df_dev
+    elif split == 'test':
+        df_test = df.iloc[indices[N_train+N_dev:],:].reset_index(drop=True)
+        return df_test
+
+
 def normalize_dataset(ds):
 
     accents = [

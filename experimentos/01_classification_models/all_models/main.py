@@ -77,11 +77,23 @@ def load_dataset(nclasses,dataset,devsize,split):
         y_devtest = df_devtest['label'].values
         data = (ds_train, y_train, ds_devtest, y_devtest)
 
-    elif dataset == 'muchocine':
+    elif dataset == 'cine':
         if split == 'dev':
-            pass
+            df_train = load_cine(split='train',nclasses=nclasses)
+            df_devtest = load_cine(split='dev',nclasses=nclasses)
         else:
-            pass
+            df_train = pd.concat(
+                [load_cine(split='train',nclasses=nclasses),
+                load_cine(split='dev',nclasses=nclasses)],
+                ignore_index=True
+            )
+            df_devtest = load_cine(split='test',nclasses=nclasses)
+
+        ds_train = normalize_dataset(df_train['review_content'])
+        y_train = df_train['review_rate'].values
+        ds_devtest = normalize_dataset(df_devtest['review_content'])
+        y_devtest = df_devtest['review_rate'].values
+        data = (ds_train, y_train, ds_devtest, y_devtest)
             
     return data
 
@@ -95,7 +107,7 @@ def main():
 
     print("Loading data...")
     ds_train, y_train, ds_devtest, y_devtest = load_dataset(**args['dataset_args'])
-    # ds_train, y_train, ds_devtest, y_devtest = ds_train[:1000], y_train[:1000], ds_devtest[:1000], y_devtest[:1000]
+    ds_train, y_train, ds_devtest, y_devtest = ds_train[:1000], y_train[:1000], ds_devtest[:1000], y_devtest[:1000]
 
     # Model training:
     print('Training...')

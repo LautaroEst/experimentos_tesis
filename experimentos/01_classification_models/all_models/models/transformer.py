@@ -151,72 +151,72 @@ class TransformerClassifier(object):
                                             shuffle=True
                                         )):
                 
-                try:
+                # try:
 
-                    input_ids_batch, token_type_ids_batch, attention_mask_batch, labels_batch = (x.to(device=device) for x in batch)
-                    
-                    scores = model(input_ids=input_ids_batch,
+                input_ids_batch, token_type_ids_batch, attention_mask_batch, labels_batch = (x.to(device=device) for x in batch)
+                
+                scores = model(input_ids=input_ids_batch,
+                            attention_mask=attention_mask_batch,
+                            token_type_ids=token_type_ids_batch,
+                            labels=labels_batch,
+                            output_hidden_states=False,
+                            output_attentions=False,
+                            return_dict=True)
+                loss = scores['loss']
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                
+                if (e * self.epochs + i) % eval_every == 0:
+
+                    print('Batch {}/{}. Epoch {}/{}'.format(i,num_batches,e+1,self.epochs))
+                    print('Train loss: {:.5f}'.format(loss.item()))
+                    train_loss_history.append(loss.item())
+                    print('Train accuracy:',end=' ')
+                    train_acc = self.check_accuracy(scores['logits'], labels_batch)
+                    train_accuracy_history.append(train_acc)
+
+                    if dev:
+                        encoded_dev_input, y_dev = dev
+                        batch = next(batch_iter(
+                                            encoded_dev_input,
+                                            self.batch_size,
+                                            pad_idx,
+                                            labels=y_dev,
+                                            shuffle=True
+                                        ))
+                        (input_ids_batch, token_type_ids_batch, attention_mask_batch, labels_batch) =  (x.to(device=device) for x in batch)
+
+                        model.eval()
+                        with torch.no_grad():
+                            scores = model(
+                                input_ids=input_ids_batch,
                                 attention_mask=attention_mask_batch,
                                 token_type_ids=token_type_ids_batch,
                                 labels=labels_batch,
                                 output_hidden_states=False,
                                 output_attentions=False,
-                                return_dict=True)
-                    loss = scores['loss']
+                                return_dict=True
+                            )
+                            loss = scores['loss']
+                            print('Dev loss: {:.5f}'.format(loss.item()))
+                            dev_loss_history.append(loss.item())
+                            print('Dev accuracy:',end=' ')
+                            dev_acc = self.check_accuracy(scores['logits'], labels_batch)
+                            dev_accuracy_history.append(dev_acc)
 
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
+                        model.train()
+
+                    print()
                     
-                    if (e * self.epochs + i) % eval_every == 0:
-
-                        print('Batch {}/{}. Epoch {}/{}'.format(i,num_batches,e+1,self.epochs))
-                        print('Train loss: {:.5f}'.format(loss.item()))
-                        train_loss_history.append(loss.item())
-                        print('Train accuracy:',end=' ')
-                        train_acc = self.check_accuracy(scores['logits'], labels_batch)
-                        train_accuracy_history.append(train_acc)
-
-                        if dev:
-                            encoded_dev_input, y_dev = dev
-                            batch = next(batch_iter(
-                                                encoded_dev_input,
-                                                self.batch_size,
-                                                pad_idx,
-                                                labels=y_dev,
-                                                shuffle=True
-                                            ))
-                            (input_ids_batch, token_type_ids_batch, attention_mask_batch, labels_batch) =  (x.to(device=device) for x in batch)
-
-                            model.eval()
-                            with torch.no_grad():
-                                scores = model(
-                                    input_ids=input_ids_batch,
-                                    attention_mask=attention_mask_batch,
-                                    token_type_ids=token_type_ids_batch,
-                                    labels=labels_batch,
-                                    output_hidden_states=False,
-                                    output_attentions=False,
-                                    return_dict=True
-                                )
-                                loss = scores['loss']
-                                print('Dev loss: {:.5f}'.format(loss.item()))
-                                dev_loss_history.append(loss.item())
-                                print('Dev accuracy:',end=' ')
-                                dev_acc = self.check_accuracy(scores['logits'], labels_batch)
-                                dev_accuracy_history.append(dev_acc)
-
-                            model.train()
-
-                        print()
-                    
-                except RuntimeError:
-                    errs += 1
-                    print("Runtime Error {}".format(errs))
-                    if errs >= 1000:
-                        device = torch.device('cpu')
-                        print("Moving to cpu...")
-                        model.to(device)
+                # except RuntimeError:
+                # errs += 1
+                # print("Runtime Error {}".format(errs))
+                # if errs >= 1000:
+                #     device = torch.device('cpu')
+                #     print("Moving to cpu...")
+                #     model.to(device)
 
         model.eval()
         self.model = model

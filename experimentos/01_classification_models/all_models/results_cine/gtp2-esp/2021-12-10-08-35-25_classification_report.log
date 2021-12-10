@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: gtp2-esp
+dataset: cine
+nclasses: 3
+split: test
+devsize: 0.0
+model_src: DeepESP/gpt2-spanish
+dropout: 0.0
+batch_size: 2
+learning_rate: 1e-06
+num_epochs: 1
+device: cuda:1
+
+Results:
+
+Train Accuracy: 42.05%
+Test/Dev Accuracy: 39.18%
+Train f1-score: 40.28%
+Test/Dev f1-score: 37.65%
+Train MAE: 68.83%
+Test/Dev MAE: 70.62%
+    
