@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: electricidad
+dataset: cine
+nclasses: 5
+split: test
+devsize: 0.0
+model_src: mrm8488/electricidad-base-discriminator
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 2
+device: cuda:1
+
+Results:
+
+Train Accuracy: 56.01%
+Test/Dev Accuracy: 46.13%
+Train f1-score: 51.32%
+Test/Dev f1-score: 40.74%
+Train MAE: 49.81%
+Test/Dev MAE: 65.21%
+    

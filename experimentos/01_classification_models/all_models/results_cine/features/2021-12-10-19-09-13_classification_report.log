@@ -1,0 +1,26 @@
+
+Args:
+
+model_name: features
+dataset: cine
+nclasses: 2
+split: test
+devsize: 0.0
+ngram_range: [1, 2]
+max_features: 50000
+hidden_size: 400
+num_epochs: 10
+batch_size: 64
+learning_rate: 0.0001
+weight_decay: 0.0
+device: cuda:1
+
+Results:
+
+Train Accuracy: 51.17%
+Test/Dev Accuracy: 47.91%
+Train f1-score: 50.70%
+Test/Dev f1-score: 47.22%
+Train MAE: 48.83%
+Test/Dev MAE: 52.09%
+    

@@ -1,0 +1,20 @@
+
+Args:
+
+model_name: naive_bayes
+dataset: cine
+nclasses: 3
+split: test
+devsize: 0.0
+ngram_range: [1, 3]
+max_features: 100000
+
+Results:
+
+Train Accuracy: 93.63%
+Test/Dev Accuracy: 53.61%
+Train f1-score: 93.70%
+Test/Dev f1-score: 47.89%
+Train MAE: 8.56%
+Test/Dev MAE: 62.63%
+    

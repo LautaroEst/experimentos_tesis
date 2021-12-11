@@ -1,0 +1,32 @@
+
+Args:
+
+model_name: gru
+dataset: tass
+nclasses: 5
+split: test
+devsize: 0.0
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+rnn: GRU
+bidirectional: False
+hidden_size: 200
+num_layers: 1
+dropout: 0.1
+batch_size: 64
+learning_rate: 0.0001
+num_epochs: 15
+device: cuda:1
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 70.35%
+Test/Dev Accuracy: 42.79%
+Train f1-score: 65.23%
+Test/Dev f1-score: 29.39%
+Train MAE: 38.81%
+Test/Dev MAE: 100.94%
+    

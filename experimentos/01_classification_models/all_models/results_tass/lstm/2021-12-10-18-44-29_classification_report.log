@@ -1,0 +1,32 @@
+
+Args:
+
+model_name: lstm
+dataset: tass
+nclasses: 5
+split: dev
+devsize: 0.1
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+rnn: LSTM
+bidirectional: True
+hidden_size: 200
+num_layers: 1
+dropout: 0.1
+batch_size: 64
+learning_rate: 0.0001
+num_epochs: 8
+device: cuda:1
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 54.73%
+Test/Dev Accuracy: 36.41%
+Train f1-score: 43.00%
+Test/Dev f1-score: 25.56%
+Train MAE: 74.64%
+Test/Dev MAE: 118.82%
+    

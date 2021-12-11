@@ -1,0 +1,30 @@
+
+Args:
+
+model_name: cbow
+dataset: cine
+nclasses: 5
+split: test
+devsize: 0.0
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+hidden_size: 200
+num_layers: 4
+dropout: 0.2
+batch_size: 128
+learning_rate: 0.0001
+num_epochs: 60
+device: cuda:1
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 84.58%
+Test/Dev Accuracy: 33.25%
+Train f1-score: 85.84%
+Test/Dev f1-score: 26.10%
+Train MAE: 23.37%
+Test/Dev MAE: 102.06%
+    

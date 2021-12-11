@@ -1,0 +1,32 @@
+
+Args:
+
+model_name: rnn
+dataset: cine
+nclasses: 2
+split: test
+devsize: 0.0
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+rnn: RNNrelu
+bidirectional: True
+hidden_size: 200
+num_layers: 1
+dropout: 0.1
+batch_size: 64
+learning_rate: 0.0001
+num_epochs: 30
+device: cuda:1
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 100.00%
+Test/Dev Accuracy: 55.89%
+Train f1-score: 100.00%
+Test/Dev f1-score: 55.75%
+Train MAE: 0.00%
+Test/Dev MAE: 44.11%
+    

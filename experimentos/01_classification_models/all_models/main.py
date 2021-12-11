@@ -5,9 +5,11 @@ from utils import *
 import json
 import os
 import pandas as pd
+import numpy as np
 
 
 MODELS_PATH = os.getcwd() + "/models.json"
+# MODELS_PATH = os.getcwd() + "/experimentos/01_classification_models/all_models/models.json"
 # MODELS_PATH = os.getcwd() + "/experimentos/01_classification_models/all_models/models.json"
 # MODELS_PATH = "/mnt/disco.mafalda/home/lestien/Documents/Trabajos 2021/melisa/experimentos/01_classification_models/all_models/models.json"
 
@@ -89,9 +91,15 @@ def load_dataset(nclasses,dataset,devsize,split):
             )
             df_devtest = load_cine(split='test',nclasses=nclasses)
 
+        def limit_len(ds):
+            ds = ds.apply(lambda s: s[:2000])
+            return ds
+
         ds_train = normalize_dataset(df_train['review_content'])
+        ds_train = limit_len(ds_train)
         y_train = df_train['review_rate'].values
         ds_devtest = normalize_dataset(df_devtest['review_content'])
+        ds_devtest = limit_len(ds_devtest)
         y_devtest = df_devtest['review_rate'].values
         data = (ds_train, y_train, ds_devtest, y_devtest)
             
@@ -107,7 +115,14 @@ def main():
 
     print("Loading data...")
     ds_train, y_train, ds_devtest, y_devtest = load_dataset(**args['dataset_args'])
-    ds_train, y_train, ds_devtest, y_devtest = ds_train[:1000], y_train[:1000], ds_devtest[:1000], y_devtest[:1000]
+    # ds_train, y_train, ds_devtest, y_devtest = ds_train[:1000], y_train[:1000], ds_devtest[:1000], y_devtest[:1000]
+
+    # counts, bins = np.histogram(ds_train.str.len(),bins=10)
+    # print(pd.Series(counts,index=bins[:-1]))
+    # print(pd.Series(y_train).value_counts())
+    # counts, bins = np.histogram(ds_devtest.str.len(),bins=10)
+    # print(pd.Series(counts,index=bins[:-1]))
+    # print(pd.Series(y_devtest).value_counts())
 
     # Model training:
     print('Training...')

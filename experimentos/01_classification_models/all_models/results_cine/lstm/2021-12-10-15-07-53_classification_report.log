@@ -1,0 +1,32 @@
+
+Args:
+
+model_name: lstm
+dataset: cine
+nclasses: 5
+split: test
+devsize: 0.0
+frequency_cutoff: 1
+max_tokens: 60000
+max_sent_len: 512
+embedding_dim: 300
+rnn: LSTM
+bidirectional: True
+hidden_size: 200
+num_layers: 1
+dropout: 0.2
+batch_size: 64
+learning_rate: 0.0001
+num_epochs: 60
+device: cuda:0
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 99.77%
+Test/Dev Accuracy: 27.06%
+Train f1-score: 99.81%
+Test/Dev f1-score: 20.98%
+Train MAE: 0.23%
+Test/Dev MAE: 109.79%
+    

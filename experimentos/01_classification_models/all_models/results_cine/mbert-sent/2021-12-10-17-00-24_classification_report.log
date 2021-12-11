@@ -1,0 +1,24 @@
+
+Args:
+
+model_name: mbert-sent
+dataset: cine
+nclasses: 2
+split: test
+devsize: 0.0
+model_src: nlptown/bert-base-multilingual-uncased-sentiment
+dropout: 0.0
+batch_size: 8
+learning_rate: 1e-05
+num_epochs: 2
+device: cuda:1
+
+Results:
+
+Train Accuracy: 98.26%
+Test/Dev Accuracy: 86.31%
+Train f1-score: 98.26%
+Test/Dev f1-score: 86.27%
+Train MAE: 1.74%
+Test/Dev MAE: 13.69%
+    

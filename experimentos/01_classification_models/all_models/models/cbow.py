@@ -90,6 +90,14 @@ class CBOWClassifier(object):
         model = CBOWModel(self.embedding_dim,len(self.vec.vocab),
                 self.hidden_size,self.nclasses,self.num_layers,self.dropout,pad_idx)
 
+        # for name, param in model.named_parameters():
+        #     if "weight" in name:
+        #         print("inicialización normal de",name)
+        #         nn.init.normal_(param,mean=0,std=1.)
+        #     elif "bias" in name:
+        #         print("inicialización con ceros de",name)
+        #         nn.init.zeros_(param)
+
         if self.pretrained_embeddings:
             model = init_embeddings(model,self.vec.vocab,self.pretrained_embeddings)
             for param in model.emb.parameters():

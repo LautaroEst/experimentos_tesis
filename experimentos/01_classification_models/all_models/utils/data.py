@@ -129,7 +129,8 @@ def load_cine(nclasses,split='train'):
     print(dataset)
     df = pd.DataFrame(dataset).loc[:,['review_body','review_summary','star_rating']]
     df = df.rename(columns={'review_body':'review_content', 'star_rating': 'review_rate', 'review_summary': 'review_title'})
-    
+    df = df.loc[df['review_content'].str.len() > 0,:].reset_index(drop=True)
+
     if nclasses == 2:
         df = df[df['review_rate'] != 3].reset_index(drop=True)
         df.loc[(df['review_rate'] <= 2),['review_rate']] = 0.

@@ -1,0 +1,26 @@
+
+Args:
+
+model_name: features
+dataset: tass
+nclasses: 3
+split: test
+devsize: 0.0
+ngram_range: [1, 2]
+max_features: 50000
+hidden_size: 400
+num_epochs: 20
+batch_size: 64
+learning_rate: 0.0001
+weight_decay: 0.0
+device: cuda:0
+
+Results:
+
+Train Accuracy: 49.25%
+Test/Dev Accuracy: 51.00%
+Train f1-score: 40.68%
+Test/Dev f1-score: 37.63%
+Train MAE: 83.04%
+Test/Dev MAE: 83.86%
+    

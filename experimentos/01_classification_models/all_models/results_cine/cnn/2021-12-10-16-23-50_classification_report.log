@@ -1,0 +1,30 @@
+
+Args:
+
+model_name: cnn
+dataset: cine
+nclasses: 5
+split: dev
+devsize: 0.0
+max_tokens: 60000
+frequency_cutoff: 1
+max_sent_len: 512
+embedding_dim: 300
+n_filters: 8
+filter_sizes: [3, 5, 7]
+dropout: 0.1
+batch_size: 64
+learning_rate: 0.0001
+num_epochs: 70
+device: cuda:1
+pretrained_embeddings: None
+
+Results:
+
+Train Accuracy: 99.33%
+Test/Dev Accuracy: 31.61%
+Train f1-score: 99.03%
+Test/Dev f1-score: 24.33%
+Train MAE: 1.61%
+Test/Dev MAE: 103.11%
+    
