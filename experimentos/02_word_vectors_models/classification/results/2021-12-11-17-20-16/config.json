@@ -1,0 +1,38 @@
+{
+    "dataset": "melisa",
+    "devsize": 0.05,
+    "model": {
+        "name": "cbow",
+        "embeddings": "elmo",
+        "embedding_dim": 1024,
+        "hidden_sizes": [
+            512,
+            128,
+            32
+        ],
+        "elmo_batch_size": 64,
+        "elmo_device": "cuda:1",
+        "dropout": 0.0
+    },
+    "tokenizer": {
+        "name": "elmo_tokenizer",
+        "max_sent_len": 512,
+        "pad_token": "[PAD]"
+    },
+    "train_kwargs": {
+        "max_epochs": 10,
+        "train_batch_size": 32,
+        "dev_batch_size": 64,
+        "learning_rate": 0.0005,
+        "patience": 10,
+        "train_eval_every": 100,
+        "dev_eval_every": 1000
+    },
+    "eval_kwargs": {
+        "max_len_of_pred_sent": 10,
+        "eval_in": [
+            "train",
+            "dev"
+        ]
+    }
+}
