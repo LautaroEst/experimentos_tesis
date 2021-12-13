@@ -27,28 +27,24 @@ class ELMOEmbedding(nn.Module):
         embeddings_batch = torch.full((batch_size,max_len,embedding_dim),self.pad_idx,dtype=torch.float)
         for i, e in enumerate(embeddings):
             embeddings_batch[i,:e.shape[0],:] = torch.from_numpy(e)
+        embeddings_batch = embeddings_batch.to(self.device)
+        attention_mask = attention_mask.to(self.device)
         return embeddings_batch, attention_mask
 
 
 class FastTextEmbedding(nn.Module):
 
-    def __init__(self,embeddings,tokenizer,embeddings_path,**kwargs):
+    def __init__(self,embeddings,tokenizer,embeddings_path):
         super().__init__()
-        if embeddings is None:
-            self.embedding_dim = kwargs['embedding_dim'] 
-            load_from_file = False
-        else:
-            filename, self.embedding_dim, total_embeddings, min_subword, max_subword = get_dim_num_path(embeddings)
-            embeddings_path = os.path.join(embeddings_path,filename)
-            load_from_file = True
+        filename, self.embedding_dim, total_embeddings, min_subword, max_subword = get_dim_num_path(embeddings)
+        embeddings_path = os.path.join(embeddings_path,filename)
         self.tokenizer = tokenizer
         self.pad_idx = tokenizer.vocab[tokenizer.pad_token]
         self.num_embeddings = len(tokenizer.vocab)
         emb = nn.Embedding(self.num_embeddings,self.embedding_dim,padding_idx=self.pad_idx)
 
-        if load_from_file:
-            emb = self.load_embeddings(embeddings_path,emb,tokenizer.vocab,
-                                total_embeddings,min_subword,max_subword)
+        emb, self.found_prop = self.load_embeddings(embeddings_path,emb,tokenizer.vocab,
+                            total_embeddings,min_subword,max_subword)
         
         self.emb = emb
 
@@ -87,12 +83,17 @@ class FastTextEmbedding(nn.Module):
                         found_some -= 1
                     emb_layer.weight[idx,:] = torch.from_numpy(v).float()
         
-        print("Found {} words and {} subwords".format(found_all,found_some))
-        return emb_layer
+        found_prop = (found_all+found_some) / len(idx2tk) * 100
+        print("Found {} words and {} subwords over {} (~{}%)".format(
+            found_all,found_some,len(idx2tk),int(found_prop)))
+        return emb_layer, found_prop
 
 
     def forward(self,batch_sents):
         batch_ids, attention_mask = self.tokenizer(batch_sents)
+        device = self.emb.weight.device
+        batch_ids = batch_ids.to(device=device)
+        attention_mask = attention_mask.to(device=device)
         embeddedings = self.emb(batch_ids)
         return embeddedings, attention_mask
 
@@ -100,10 +101,10 @@ class FastTextEmbedding(nn.Module):
 
 class WordEmbedding(nn.Module):
 
-    def __init__(self,embeddings,tokenizer,embeddings_path,**kwargs):
+    def __init__(self,embeddings,tokenizer,embeddings_path,embedding_dim=None):
         super().__init__()
         if embeddings is None:
-            self.embedding_dim = kwargs['embedding_dim'] 
+            self.embedding_dim = embedding_dim
             load_from_file = False
         else:
             filename, self.embedding_dim, total_embeddings = get_dim_num_path(embeddings)
@@ -115,7 +116,7 @@ class WordEmbedding(nn.Module):
         emb = nn.Embedding(self.num_embeddings,self.embedding_dim,padding_idx=self.pad_idx)
 
         if load_from_file:
-            emb = self.load_embeddings(embeddings_path,tokenizer.vocab,total_embeddings,emb)
+            emb, self.found_prop = self.load_embeddings(embeddings_path,tokenizer.vocab,total_embeddings,emb)
         
         self.emb = emb
 
@@ -136,11 +137,15 @@ class WordEmbedding(nn.Module):
                 except KeyError:
                     emb.weight[idx,:] = torch.randn(embedding_dim)
         
-        print("Found {}/{} ({:.0}%) embeddings".format(embeddings_found,len(idx2tk),embeddings_found/len(idx2tk)*100))
-        return emb
+        found_prop = embeddings_found/len(idx2tk)*100
+        print("Found {}/{} (~{}%) embeddings".format(embeddings_found,len(idx2tk),int(found_prop)))
+        return emb, found_prop
 
     def forward(self,batch_sents):
         batch_ids, attention_mask = self.tokenizer(batch_sents)
+        device = self.emb.weight.device
+        batch_ids = batch_ids.to(device=device)
+        attention_mask = attention_mask.to(device=device)
         embeddedings = self.emb(batch_ids)
         return embeddedings, attention_mask
 

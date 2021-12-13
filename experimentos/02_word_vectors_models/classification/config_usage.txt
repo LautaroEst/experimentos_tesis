@@ -1,0 +1,33 @@
+{
+    "dataset": "cine" | "melisa" | "tass" | "amazon",
+    "devisize: float (sólo válido si dataset == "melisa" | "tass")
+    "model": {
+        "name": "cbow" | "lstm" | "cnn",
+        "embeddings": "word2vec300" | "glove300" | "fasttext300" | "elmo" | null,
+        "embedding_dim": float (opcional, cuando embeddings == null),
+        "hidden_size": int (cuando "name" == "lstm"),
+        "hidden_sizes": List[int] (cuando "name" == "cbow"),
+        "n_filters": int (cuando "name" == "cnn"),
+        "filter_sizes": List[int] (cuando "name" == "cnn"),
+        "elmo_batch_size": int (cuando "embeddings" == "elmo"),
+        "dropout": float 
+    },
+    "tokenizer": {
+        "name": "word_tokenizer" | "elmo_tokenizer",
+        "max_sent_len": int,
+        "pad_token": str,
+        "max_tokens": int (válido para "name" == "word_tokenizer"),
+        "freq_cutoff": int (válido para "name" == "word_tokenizer"),
+        "unk_token": str (válido para "name" == "word_tokenizer")
+    },
+    "train_kwargs": {
+        "max_epochs": 10,
+        "train_batch_size": 32,
+        "dev_batch_size": 64,
+        "learning_rate": 5e-4,
+        "patience": 10,
+        "train_eval_every": 10,
+        "dev_eval_every": 100,
+        "device": "cuda:1"
+    }
+}

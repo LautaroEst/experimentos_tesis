@@ -1,7 +1,7 @@
 import pickle
 from matplotlib import pyplot as plt
 import numpy as np
-from utils import WordTokenizer, ElmoTokenizer, parse_args
+from utils import WordTokenizer, ElmoTokenizer, parse_args, plot_history
 from models import *
 import os
 import torch
@@ -11,7 +11,8 @@ from utils.data import load_melisa, load_and_split_melisa, \
                     load_cine, normalize_dataset
 import pandas as pd
 from time import time
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, classification_report
+from tqdm import tqdm
 
 EMBEDDINGS_ROOT_PATH = os.path.join(os.getcwd(),"../../../pretrained_models/")
 
@@ -51,6 +52,9 @@ def load_dataset(nclasses,dataset,devsize):
         ds_dev = limit_len(normalize_dataset(df_dev['review_content']))
         y_train = df_train['review_rate']
         y_dev = df_dev['review_rate']
+    
+    else:
+        raise NameError("Dataset not supported")
             
     data = {
         'sent_train': ds_train, 
@@ -66,12 +70,18 @@ def init_model(model_kwargs,tokenizer):
     model_name = model_kwargs.pop("name")
     embeddings = model_kwargs.pop("embeddings")
 
-    if embeddings is None or embeddings in ["word2vec300", "glove300"]:
+    if embeddings is None:
         embeddings_path = EMBEDDINGS_ROOT_PATH
-        embedding = WordEmbedding(embeddings,tokenizer,embeddings_path,**model_kwargs)
+        embedding_dim = model_kwargs.pop("embedding_dim")
+        embedding = WordEmbedding(embeddings=None,tokenizer=tokenizer,
+                            embeddings_path=embeddings_path,embedding_dim=embedding_dim)
+    elif embeddings in ["word2vec300", "glove300"]:
+        embeddings_path = EMBEDDINGS_ROOT_PATH
+        embedding = WordEmbedding(embeddings=embeddings,tokenizer=tokenizer,
+                            embeddings_path=embeddings_path,embedding_dim=None)
     elif embeddings == "fasttext300":
         embeddings_path = EMBEDDINGS_ROOT_PATH
-        embedding = FastTextEmbedding(tokenizer,embeddings_path)
+        embedding = FastTextEmbedding(embeddings,tokenizer,embeddings_path)
     elif embeddings == "elmo":
         embeddings_path = os.path.join(EMBEDDINGS_ROOT_PATH,"elmo/")
         embedding = ELMOEmbedding(tokenizer,embeddings_path,model_kwargs.pop("elmo_batch_size"))
@@ -81,11 +91,9 @@ def init_model(model_kwargs,tokenizer):
     if model_name == "cbow":
         model = CBOWClassifier(embedding,num_outs=5,**model_kwargs)
     elif model_name == "lstm":
-        model = None
-    elif model_name == "gru":
-        model = None
+        model = RNNClassifier(embedding,rnn="LSTM",num_outs=5,num_layers=1,bidirectional=True,**model_kwargs)
     elif model_name == "cnn":
-        model = None
+        model = CNNClassifier(embedding,nclasses=5,**model_kwargs)
     else:
         raise NameError("Model not supported")
 
@@ -124,7 +132,7 @@ def batch_iter(sent,y,batch_size,device,shuffle=True):
 def evaluate_f1_train(y_true_parts,y_pred_parts):
     y_true = np.hstack(y_true_parts)
     y_pred = np.hstack(y_pred_parts)
-    return f1_score(y_true,y_pred)
+    return f1_score(y_true,y_pred,average="macro")*100
 
 
 def evaluate_f1_loss_dev(model,sent_dev,y_dev,batch_size,criterion,device):
@@ -132,7 +140,7 @@ def evaluate_f1_loss_dev(model,sent_dev,y_dev,batch_size,criterion,device):
     was_training = model.training
     model.eval()
 
-    cum_loss = 0
+    cum_loss = cum_num_examples = 0
     cum_dev_labels_pred = []
     cum_dev_labels_true = []
 
@@ -153,11 +161,13 @@ def evaluate_f1_loss_dev(model,sent_dev,y_dev,batch_size,criterion,device):
             cum_dev_labels_true.append(batch_y.cpu().numpy())
 
             cum_loss += loss.item()
+            num_examples = len(batch_sent)
+            cum_num_examples += num_examples
 
-    total_loss = cum_loss / len(y_dev)
+    total_loss = cum_loss / cum_num_examples
     y_true = np.hstack(cum_dev_labels_true)
     y_pred = np.hstack(cum_dev_labels_pred)
-    f1 = f1_score(y_true,y_pred)
+    f1 = f1_score(y_true,y_pred,average="macro")*100
 
     if was_training:
         model.train()
@@ -168,32 +178,10 @@ def evaluate_f1_loss_dev(model,sent_dev,y_dev,batch_size,criterion,device):
 def save_checkpoint(model,optimizer,path):
     params = {
         'model_state_dict': model.state_dict(),
-        'src_tokenizer': model.encoder.tokenizer,
-        'tgt_tokenizer': model.decoder.tokenizer,
+        'tokenizer': model.emb.tokenizer,
         'optimizer_state_dict': optimizer.state_dict()
     }
     torch.save(params,path)
-
-
-def plot_and_save_ppl(history,results_dir):
-    with open(os.path.join(results_dir,'ppl_history.pkl'), "wb") as f:
-        pickle.dump(history,f)
-
-    fig, ax = plt.subplots(1,1,figsize=(10,6))
-    train_ppl = history['train_history']
-    dev_ppl = history['dev_history']
-    train_eval_every = history['train_eval_every']
-    dev_eval_every = history['dev_eval_every']
-    ax.plot(np.arange(len(train_ppl))*train_eval_every,train_ppl,label='Train Perplexity')
-    ax.plot(np.arange(len(dev_ppl))*dev_eval_every,dev_ppl,label='Dev Perplexity')
-    ax.set_title('Perplexity history',fontsize='xx-large')
-    ax.grid(True)
-    ax.set_yscale('log')
-    ax.legend(loc='upper right',fontsize='x-large')
-
-    fig.tight_layout()
-    plt.savefig(os.path.join(results_dir,'ppl_history.png'))
-
 
 def train(
         model,
@@ -213,7 +201,9 @@ def train(
     checkpoint_path = str(os.path.join(results_dir,'checkpoint.pkl'))
     
     optimizer = optim.Adam(model.parameters(),lr=lr)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(reduction='sum')
+
+    model.to(device)
 
     train_loss_history = []
     train_f1score_history = []
@@ -243,7 +233,7 @@ def train(
             optimizer.step()
 
             loss_val = loss.item()
-            num_examples = batch_sent.size(0)
+            num_examples = len(batch_sent)
             cum_train_loss += loss_val
             cum_num_examples += num_examples
             cum_train_labels_pred.append(scores.cpu().detach().max(dim=1).indices.numpy())
@@ -254,9 +244,9 @@ def train(
                 avg_loss = cum_train_loss / cum_num_examples
                 print('Train avg. loss: {:.5f}'.format(avg_loss))
                 train_loss_history.append(avg_loss)
-                train_f1 = evaluate_f1_train(cum_train_labels_true,cum_train_labels_pred)
-                print('Train f1-score : {:.5f}'.format(avg_loss))
-                train_f1score_history.append(train_f1)
+                avg_f1 = evaluate_f1_train(cum_train_labels_true,cum_train_labels_pred)
+                print('Train avg. f1-score : {:.5f}'.format(avg_f1))
+                train_f1score_history.append(avg_f1)
                 cum_train_loss = cum_num_examples = 0
                 cum_train_labels_pred = []
                 cum_train_labels_true = []
@@ -267,7 +257,8 @@ def train(
                 print('Dev loss: {:.5f}. Dev f1-score: {:.5f}'.format(dev_loss,dev_f1))
 
                 is_better = len(dev_f1score_history) == 0 or dev_f1 > max(dev_f1score_history)
-                dev_f1score_history.append(dev_f1score_history)
+                dev_f1score_history.append(dev_f1)
+                dev_loss_history.append(dev_loss)
 
                 if is_better:
                     patience_count = 0
@@ -285,7 +276,13 @@ def train(
         e += 1
 
     end_time = time()
-    print("Duración del entrenamiento: {:.2f} horas".format((end_time-start_time) / 3600))
+    training_time = end_time-start_time
+    print("Duración del entrenamiento: {} horas {} minutos {} segundos".format(
+                                                        int(training_time//3600),
+                                                        int((training_time % 3600) // 60),
+                                                        int(training_time % 60) 
+                                                    )
+    )
     history = dict(
         train_loss_history=train_loss_history,
         train_f1score_history=train_f1score_history,
@@ -297,30 +294,137 @@ def train(
     return history
     
 
+def evaluate_all(model,data,results_dir,**kwargs):
+
+    was_training = model.training
+    model.eval()
+    device = torch.device(kwargs['device'])
+    criterion = nn.CrossEntropyLoss(reduction='sum')
+
+    results = {}
+    for split in ["train", "dev"]:
+
+        cum_loss = 0
+        cum_labels_pred = []
+        cum_labels_true = []
+
+        num_batches = len(torch.arange(len(data['y_'+split])).split(kwargs[split+'_batch_size']))
+
+        with torch.no_grad():
+            for i, batch in tqdm(batch_iter(
+                                data['sent_'+split],
+                                data['y_'+split],
+                                kwargs[split+'_batch_size'],
+                                device,
+                                shuffle=False
+                            ),total=num_batches):
+
+                batch_sent, batch_y = batch
+                scores = model(batch_sent)
+                loss = criterion(scores,batch_y)
+
+                cum_labels_pred.append(scores.cpu().max(dim=1).indices.numpy())
+                cum_labels_true.append(batch_y.cpu().numpy())
+
+                cum_loss += loss.item()
+
+        total_loss = cum_loss / len(data['y_'+split])
+        y_true = np.hstack(cum_labels_true)
+        y_pred = np.hstack(cum_labels_pred)
+        f1 = f1_score(y_true,y_pred,average="macro")*100
+
+        print()
+        print("{} RESULTS:".format(split.upper()))
+        print("-----------")
+        print("Avg loss: {:.3f}".format(total_loss))
+        print("f1-score macro (%): {:.2f}".format(f1))
+
+        results[split] = dict(
+            loss=total_loss,
+            f1=f1,
+            y_true=y_true,
+            y_pred=y_pred
+        )
+
+    with open(os.path.join(results_dir,"results.pkl"),"wb") as f:
+        pickle.dump(results,f)
+
+    with open(os.path.join(results_dir,"results.txt"),"w") as f:
+        f.write("""
+        
+TRAIN RESULTS:
+--------------
+Avg loss: {:.3f}
+MAE (x100): {:.2f}
+
+Classification Report:
+
+{}
+
+
+DEV RESULTS:
+------------
+Avg loss: {:.3f}
+MAE (x100): {:.2f}
+
+Classification Report:
+
+{}
+        
+        """.format(
+            results['train']['loss'],
+            calculate_mae(results['train']['y_true'],results['train']['y_pred']),
+            classification_report(results['train']['y_true'],results['train']['y_pred'],digits=6),
+            results['dev']['loss'],
+            calculate_mae(results['dev']['y_true'],results['dev']['y_pred']),
+            classification_report(results['dev']['y_true'],results['dev']['y_pred'],digits=6)
+            )
+        )
+
+
+    if was_training:
+        model.train()
+
+
+def calculate_mae(y_true,y_pred):
+    return np.abs(y_true-y_pred).mean()*100
 
 def main():
 
     # Read args
+    print("Parsing args...")
     args = parse_args()
         
     # Dataset loading:
+    print("Loading dataset...")
     dataset_args = args.pop('dataset_args')
     data = load_dataset(nclasses=5,**dataset_args)
-    data = {key: val[:1000] for key, val in data.items()}
+    # data = {key: val[:1000] for key, val in data.items()}
 
     # Inicialización del tokenizer
+    print("Initializing tokenizer...")
     tokenizer_kwargs = args.pop('tokenizer_kwargs')
     tokenizer = init_tokenizer(data['sent_train'],tokenizer_kwargs)
     
     # Inicialización del modelo
+    print("Initializing model...")
     model_kwargs = args.pop('model_kwargs')
     model = init_model(model_kwargs,tokenizer)
+    print("Training...")
     history = train(
         model=model,
         data=data,
         results_dir=args['results_dir'],
         **args['train_kwargs']
     )
+
+    # Gráfico del historial
+    print("Plotting history...")
+    plot_history(history,args['results_dir'])
+
+    # Evaluación de los resultados
+    print("Evaluating results...")
+    evaluate_all(model,data,args['results_dir'],**args['train_kwargs'])
 
     
 
