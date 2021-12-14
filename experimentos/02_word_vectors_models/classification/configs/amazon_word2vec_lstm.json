@@ -1,11 +1,9 @@
 {
-    "dataset": "tass",
-    "devsize": 0.1,
+    "dataset": "amazon",
     "model": {
-        "name": "cnn",
-        "embeddings": "fasttext300",
-        "n_filters": 8,
-        "filter_sizes": [3, 5, 7],
+        "name": "lstm",
+        "embeddings": "word2vec300",
+        "hidden_sizes": 200,
         "dropout": 0.0
     },
     "tokenizer": {
@@ -17,13 +15,13 @@
         "unk_token": "[UNK]"
     },
     "train_kwargs": {
-        "max_epochs": 10,
+        "max_epochs": 50,
         "train_batch_size": 32,
         "dev_batch_size": 64,
-        "learning_rate": 5e-4,
+        "learning_rate": 1e-4,
         "patience": 10,
-        "train_eval_every": 10,
-        "dev_eval_every": 100,
+        "train_eval_every": 100,
+        "dev_eval_every": 1000,
         "device": "cuda:1"
     }
 }

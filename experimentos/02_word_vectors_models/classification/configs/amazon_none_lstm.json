@@ -1,10 +1,10 @@
 {
-    "dataset": "melisa",
-    "devsize": 0.05,
+    "dataset": "amazon",
     "model": {
-        "name": "cbow",
-        "embeddings": "glove300",
-        "hidden_sizes": [512, 128, 32],
+        "name": "lstm",
+        "embeddings": null,
+        "embedding_dim": 300,
+        "hidden_size": 200,
         "dropout": 0.0
     },
     "tokenizer": {
@@ -16,10 +16,10 @@
         "unk_token": "[UNK]"
     },
     "train_kwargs": {
-        "max_epochs": 10,
+        "max_epochs": 50,
         "train_batch_size": 32,
         "dev_batch_size": 64,
-        "learning_rate": 5e-4,
+        "learning_rate": 1e-4,
         "patience": 10,
         "train_eval_every": 100,
         "dev_eval_every": 1000,

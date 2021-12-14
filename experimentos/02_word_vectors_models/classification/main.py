@@ -11,7 +11,7 @@ from utils.data import load_melisa, load_and_split_melisa, \
                     load_cine, normalize_dataset
 import pandas as pd
 from time import time
-from sklearn.metrics import f1_score, classification_report
+from sklearn.metrics import f1_score, classification_report, confusion_matrix
 from tqdm import tqdm
 
 EMBEDDINGS_ROOT_PATH = os.path.join(os.getcwd(),"../../../pretrained_models/")
@@ -290,13 +290,18 @@ def train(
         dev_f1score_history=dev_f1score_history,
         train_eval_every=train_eval_every,
         dev_eval_every=dev_eval_every,
+        max_epochs=max_epochs,
+        last_epoch=e
     )
     return history
     
 
-def evaluate_all(model,data,results_dir,**kwargs):
+def evaluate_all(model,data,results_dir,history,**kwargs):
 
-    was_training = model.training
+    print("Loading best model for evaluation...")
+    state_dict = torch.load(os.path.join(results_dir,"checkpoint.pkl"))['model_state_dict']
+    model.load_state_dict(state_dict)
+
     model.eval()
     device = torch.device(kwargs['device'])
     criterion = nn.CrossEntropyLoss(reduction='sum')
@@ -351,6 +356,8 @@ def evaluate_all(model,data,results_dir,**kwargs):
 
     with open(os.path.join(results_dir,"results.txt"),"w") as f:
         f.write("""
+
+Epochs: {}/{}
         
 TRAIN RESULTS:
 --------------
@@ -372,6 +379,7 @@ Classification Report:
 {}
         
         """.format(
+            history['max_epochs'],history['last_epoch'],
             results['train']['loss'],
             calculate_mae(results['train']['y_true'],results['train']['y_pred']),
             classification_report(results['train']['y_true'],results['train']['y_pred'],digits=6),
@@ -381,9 +389,31 @@ Classification Report:
             )
         )
 
+    list_of_labels = list(range(5))
 
-    if was_training:
-        model.train()
+    cm_train = confusion_matrix(results['train']['y_true'],results['train']['y_pred'],labels=list_of_labels)
+    cm_dev = confusion_matrix(results['dev']['y_true'],results['dev']['y_pred'],labels=list_of_labels)
+    fig, (ax1, ax2) = plt.subplots(1,2,figsize=(10,6))
+    im = ax1.imshow(cm_train,cmap='cividis')
+    ax1.set_title('Train Confusion Matrix',fontsize='xx-large')
+    im = ax2.imshow(cm_dev,cmap='cividis')
+    ax2.set_title('Dev Confusion Matrix',fontsize='xx-large')
+
+    for ax, cm in [(ax1, cm_train), (ax2, cm_dev)]:
+        ticks = list_of_labels
+        ax.set_xticks(ticks)
+        ax.set_xticklabels(ticks,fontsize='xx-large')
+        ax.set_yticks(ticks)
+        ax.set_yticklabels(ticks,fontsize='xx-large')
+        
+        for i in list_of_labels:
+            for j in list_of_labels:
+                text = ax.text(j, i, cm[i, j],
+                            ha="center", va="center", color="red")
+    
+    fig.tight_layout()
+    plt.savefig(os.path.join(results_dir,'confusion_matrix.png'))
+
 
 
 def calculate_mae(y_true,y_pred):
@@ -424,7 +454,7 @@ def main():
 
     # Evaluación de los resultados
     print("Evaluating results...")
-    evaluate_all(model,data,args['results_dir'],**args['train_kwargs'])
+    evaluate_all(model,data,args['results_dir'],history,**args['train_kwargs'])
 
     
 

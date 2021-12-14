@@ -1,6 +1,5 @@
 {
-    "dataset": "melisa",
-    "devsize": 0.05,
+    "dataset": "tass",
     "model": {
         "name": "cnn",
         "embeddings": "word2vec300",
@@ -17,13 +16,13 @@
         "unk_token": "[UNK]"
     },
     "train_kwargs": {
-        "max_epochs": 10,
+        "max_epochs": 500,
         "train_batch_size": 32,
         "dev_batch_size": 64,
-        "learning_rate": 5e-4,
+        "learning_rate": 1e-4,
         "patience": 10,
-        "train_eval_every": 100,
-        "dev_eval_every": 1000,
+        "train_eval_every": 50,
+        "dev_eval_every": 500,
         "device": "cuda:1"
     }
 }

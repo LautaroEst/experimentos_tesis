@@ -1,11 +1,11 @@
 {
-    "dataset": "tass",
-    "devsize": 0.1,
+    "dataset": "melisa",
+    "devsize": 0.05,
     "model": {
-        "name": "lstm",
+        "name": "cbow",
         "embeddings": "elmo",
-        "hidden_size": 200,
-        "elmo_batch_size": 64,
+        "hidden_sizes": [300, 200, 100, 50],
+        "elmo_batch_size": 128,
         "dropout": 0.0
     },
     "tokenizer": {
@@ -14,13 +14,13 @@
         "pad_token": "[PAD]"
     },
     "train_kwargs": {
-        "max_epochs": 10,
+        "max_epochs": 50,
         "train_batch_size": 32,
         "dev_batch_size": 64,
-        "learning_rate": 5e-4,
+        "learning_rate": 1e-4,
         "patience": 10,
-        "train_eval_every": 10,
-        "dev_eval_every": 100,
+        "train_eval_every": 100,
+        "dev_eval_every": 1000,
         "device": "cuda:1"
     }
 }
