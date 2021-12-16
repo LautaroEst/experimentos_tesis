@@ -455,7 +455,6 @@ def main():
     # Evaluación de los resultados
     print("Evaluating results...")
     evaluate_all(model,data,args['results_dir'],history,**args['train_kwargs'])
-
     
 
 

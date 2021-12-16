@@ -1,0 +1,27 @@
+{
+    "dataset": "melisa",
+    "devsize": 0.05,
+    "model": {
+        "name": "cnn",
+        "embeddings": "elmo",
+        "n_filters": 8,
+        "filter_sizes": [3, 5, 7],
+        "elmo_batch_size": 64,
+        "dropout": 0.2
+    },
+    "tokenizer": {
+        "name": "elmo_tokenizer",
+        "max_sent_len": 512,
+        "pad_token": "[PAD]"
+    },
+    "train_kwargs": {
+        "max_epochs": 50,
+        "train_batch_size": 32,
+        "dev_batch_size": 64,
+        "learning_rate": 1e-4,
+        "patience": 10,
+        "train_eval_every": 100,
+        "dev_eval_every": 1000,
+        "device": "cuda:1"
+    }
+}

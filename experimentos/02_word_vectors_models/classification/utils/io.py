@@ -55,8 +55,11 @@ def parse_args():
 
 
 def plot_history(history,results_dir):
-    with open(os.path.join(results_dir,'ppl_history.pkl'), "wb") as f:
+    with open(os.path.join(results_dir,'loss_history.pkl'), "wb") as f:
         pickle.dump(history,f)
+
+    step = np.argmax(history['dev_f1score_history'])
+    max_place = step *  history['dev_eval_every']
 
     fig, ax = plt.subplots(1,2,figsize=(10,6))
     train_loss = history['train_loss_history']
@@ -67,12 +70,14 @@ def plot_history(history,results_dir):
     dev_eval_every = history['dev_eval_every']
     ax[0].plot(np.arange(len(train_loss))*train_eval_every,train_loss,label='Train')
     ax[0].plot(np.arange(len(dev_loss))*dev_eval_every,dev_loss,label='Dev')
+    ax[0].axvline(x=max_place,ymin=0,ymax=ax[0].get_ylim()[1],c='k')
     ax[0].set_title('Loss history',fontsize='xx-large')
     ax[0].grid(True)
     ax[0].legend(loc='upper right',fontsize='x-large')
 
     ax[1].plot(np.arange(len(train_f1))*train_eval_every,train_f1,label='Train')
     ax[1].plot(np.arange(len(dev_f1))*dev_eval_every,dev_f1,label='Dev')
+    ax[1].axvline(x=max_place,ymin=0,ymax=ax[0].get_ylim()[1],c='k')
     ax[1].set_title('f1-score history',fontsize='xx-large')
     ax[1].grid(True)
     ax[1].legend(loc='upper right',fontsize='x-large')

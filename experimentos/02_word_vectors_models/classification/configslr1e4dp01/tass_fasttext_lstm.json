@@ -1,0 +1,28 @@
+{
+    "dataset": "tass",
+    "devsize": 0.1,
+    "model": {
+        "name": "lstm",
+        "embeddings": "fasttext300",
+        "hidden_size": 200,
+        "dropout": 0.1
+    },
+    "tokenizer": {
+        "name": "word_tokenizer",
+        "max_sent_len": 512,
+        "max_tokens": 60000,
+        "freq_cutoff": 1,
+        "pad_token": "[PAD]",
+        "unk_token": "[UNK]"
+    },
+    "train_kwargs": {
+        "max_epochs": 500,
+        "train_batch_size": 32,
+        "dev_batch_size": 64,
+        "learning_rate": 1e-4,
+        "patience": 10,
+        "train_eval_every": 50,
+        "dev_eval_every": 500,
+        "device": "cuda:1"
+    }
+}

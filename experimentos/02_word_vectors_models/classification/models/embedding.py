@@ -79,7 +79,7 @@ class FastTextEmbedding(nn.Module):
                             #v += np.random.randn(embedding_dim)
                             pass
                     if v.sum() == 0:
-                        v = np.random.randn(embedding_dim)
+                        v = np.random.randn(embedding_dim)*0.01
                         found_some -= 1
                     emb_layer.weight[idx,:] = torch.from_numpy(v).float()
         
@@ -135,7 +135,7 @@ class WordEmbedding(nn.Module):
                     emb.weight[idx,:] = torch.from_numpy(wordvectors[tk].copy()).float()
                     embeddings_found += 1
                 except KeyError:
-                    emb.weight[idx,:] = torch.randn(embedding_dim)
+                    emb.weight[idx,:] = torch.randn(embedding_dim)*0.01
         
         found_prop = embeddings_found/len(idx2tk)*100
         print("Found {}/{} (~{}%) embeddings".format(embeddings_found,len(idx2tk),int(found_prop)))
