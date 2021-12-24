@@ -93,7 +93,7 @@ class ElmoTokenizer(object):
         attention_mask = []
         for sent in input_sents:
             input_sents_trunc.append(sent[:max_len])
-            sent_len = len(sent)
+            sent_len = len(sent[:max_len])
             mask = [True] * sent_len
             mask.extend([False] * (max_len-sent_len))
             attention_mask.append(mask)

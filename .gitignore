@@ -14,5 +14,5 @@ experimentos_old/**/*.freqs
 experimentos_old/**/*.tokenized
 experimentos/**/*.freqs
 experimentos/**/*.tokenized
-other_datasets/tass2012/*
+other_datasets/*
 assignment4/*

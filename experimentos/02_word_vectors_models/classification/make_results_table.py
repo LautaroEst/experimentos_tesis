@@ -30,25 +30,23 @@ def make_table(results_dirs):
         dataset = config['dataset']
         wordvector = "none" if config['model']['embeddings'] is None else re.findall(r"(none|word2vec|fasttext|glove|elmo)",config['model']['embeddings'])[0]
         model = config['model']['name']
-        new_result_dir = "./results_enhaced/{}_{}_{}/".format(dataset,wordvector,model)
+        
         try:
-            os.mkdir(new_result_dir)
-        except OSError:
+            with open(os.path.join(result_dir,"results.txt"),"r") as f:
+                count = 0
+                for line in f.readlines():
+                    if "macro avg" in line:
+                        count += 1
+                        if count == 2:
+                            break
+
+                current_value = results_dict[dataset][wordvector][model]["f1"]
+                f1_score = float(re.split(r"\s+",line)[5])*100
+                if current_value is None or current_value < f1_score:
+                    results_dict[dataset][wordvector][model]["f1"] = f1_score
+                    results_dict[dataset][wordvector][model]["result_dir"] = result_dir
+        except FileNotFoundError:
             pass
-
-        with open(os.path.join("results_old/",result_dir,"results.txt"),"r") as f:
-            count = 0
-            for line in f.readlines():
-                if "macro avg" in line:
-                    count += 1
-                    if count == 2:
-                        break
-
-            current_value = results_dict[dataset][wordvector][model]["f1"]
-            f1_score = float(re.split(r"\s+",line)[4])*100
-            if current_value is None or current_value < f1_score:
-                results_dict[dataset][wordvector][model]["f1"] = f1_score
-                results_dict[dataset][wordvector][model]["result_dir"] = result_dir
 
     first_dataset = next(iter(results_dict.keys()))
     rows = [" & " + " & ".join([dataset for dataset in results_dict.keys()]) + "\\\\\n"]
@@ -64,6 +62,8 @@ def make_table(results_dirs):
                     row = "{} & - ".format(row)
             row = "{} \\\\\n".format(row)
             rows.append(row)
+        row = "{}\\hline\n".format(row[:-1])
+        rows[-1] = row
 
     return rows
     

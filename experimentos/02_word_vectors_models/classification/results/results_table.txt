@@ -1,0 +1,16 @@
+ & amazon & cine & melisa & tass\\
+cbow+none & 50.47(./results/amazon_none_cbow/2021-12-15-21-17-28)  & 31.77(./results/cine_none_cbow/2021-12-15-22-37-23)  & 59.71(./results/melisa_none_cbow/2021-12-15-23-20-53)  & 25.79(./results/tass_none_cbow/2021-12-16-01-43-26)  \\
+lstm+none & 53.85(./results/amazon_none_lstm/2021-12-15-21-32-57)  & 27.45(./results/cine_none_lstm/2021-12-15-22-41-42)  & 64.83(./results/melisa_none_lstm/2021-12-16-00-29-03)  & 36.70(./results/tass_none_lstm/2021-12-16-01-46-21)  \\
+cnn+none & 50.78(./results/amazon_none_cnn/2021-12-15-22-25-01)  & 24.81(./results/cine_none_cnn/2021-12-15-23-07-07)  & 59.67(./results/melisa_none_cnn/2021-12-16-01-11-24)  & 35.01(./results/tass_none_cnn/2021-12-16-01-52-48)  \\\hline
+cbow+word2vec & 50.46(./results/amazon_word2vec_cbow/2021-12-16-02-01-19)  & 17.95(./results/cine_word2vec_cbow/2021-12-16-03-36-08)  & 59.34(./results/melisa_word2vec_cbow/2021-12-16-04-40-36)  & 17.86(./results/tass_word2vec_cbow/2021-12-16-08-46-08)  \\
+lstm+word2vec & 53.56(./results/amazon_word2vec_lstm/2021-12-16-02-47-33)  & 28.61(./results/cine_word2vec_lstm/2021-12-16-03-44-33)  & 64.88(./results/melisa_word2vec_lstm/2021-12-16-07-14-57)  & 29.46(./results/tass_word2vec_lstm/2021-12-16-08-52-28)  \\
+cnn+word2vec & 53.07(./results/amazon_word2vec_cnn/2021-12-16-03-04-02)  & 18.69(./results/cine_word2vec_cnn/2021-12-16-04-24-14)  & 61.05(./results/melisa_word2vec_cnn/2021-12-16-08-12-25)  & 30.55(./results/tass_word2vec_cnn/2021-12-16-09-06-53)  \\\hline
+cbow+glove & 51.21(./results/amazon_glove_cbow/2021-12-16-09-33-07)  & 28.59(./results/cine_glove_cbow/2021-12-16-11-03-33)  & 59.96(./results/melisa_glove_cbow/2021-12-16-12-24-18)  & 34.28(./results/tass_glove_cbow/2021-12-16-15-00-19)  \\
+lstm+glove & 55.16(./results/amazon_glove_lstm/2021-12-16-09-41-02)  & 36.29(./results/cine_glove_lstm/2021-12-24-00-17-09)  & 65.64(./results/melisa_glove_lstm/2021-12-16-13-13-54)  & 38.88(./results/tass_glove_lstm/2021-12-16-15-17-01)  \\
+cnn+glove & 53.09(./results/amazon_glove_cnn/2021-12-16-10-52-41)  & 27.18(./results/cine_glove_cnn/2021-12-16-12-06-07)  & 60.95(./results/melisa_glove_cnn/2021-12-16-14-29-17)  & 41.49(./results/tass_glove_cnn/2021-12-16-15-20-54)  \\\hline
+cbow+fasttext & 51.97(./results/amazon_fasttext_cbow/2021-12-24-01-09-39)  & 17.17(./results/cine_fasttext_cbow/2021-12-24-02-46-48)  & 59.07(./results/melisa_fasttext_cbow/2021-12-24-04-09-48)  & 35.29(./results/tass_fasttext_cbow/2021-12-24-06-08-06)  \\
+lstm+fasttext & 54.52(./results/amazon_fasttext_lstm/2021-12-24-01-55-36)  & 37.53(./results/cine_fasttext_lstm/2021-12-24-03-12-11)  & 65.38(./results/melisa_fasttext_lstm/2021-12-24-04-19-33)  & 40.53(./results/tass_fasttext_lstm/2021-12-24-06-14-01)  \\
+cnn+fasttext & 53.43(./results/amazon_fasttext_cnn/2021-12-24-02-31-44)  & 22.52(./results/cine_fasttext_cnn/2021-12-24-03-41-21)  & 60.88(./results/melisa_fasttext_cnn/2021-12-24-05-52-51)  & 39.11(./results/tass_fasttext_cnn/2021-12-24-06-25-29)  \\\hline
+cbow+elmo & 48.82(./results/amazon_elmo_cbow/2021-12-24-08-43-06)  & -  & -  & -  \\
+lstm+elmo & -  & -  & -  & -  \\
+cnn+elmo & -  & -  & -  & -  \\\hline

@@ -1,5 +1,5 @@
 {
-    "dataset": "amazon",
+    "dataset": "cine",
     "model": {
         "name": "lstm",
         "embeddings": "glove300",
