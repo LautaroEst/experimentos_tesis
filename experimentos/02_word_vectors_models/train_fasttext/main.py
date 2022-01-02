@@ -105,7 +105,6 @@ def inspect_SBWC():
     print("Cantidad total de tipos con frecuencia mayor a {}:".format(freq_cutoff),len(frequent_types_dict))
     print()
     
-def 
 
 
 
