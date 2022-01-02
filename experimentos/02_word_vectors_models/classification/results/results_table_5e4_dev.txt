@@ -11,6 +11,6 @@ cnn+glove & 53.09(./results/amazon_glove_cnn/2021-12-16-10-52-41)  & 27.18(./res
 cbow+fasttext & 51.97(./results/amazon_fasttext_cbow/2021-12-24-01-09-39)  & 17.17(./results/cine_fasttext_cbow/2021-12-24-02-46-48)  & 59.07(./results/melisa_fasttext_cbow/2021-12-24-04-09-48)  & 35.29(./results/tass_fasttext_cbow/2021-12-24-06-08-06)  \\
 lstm+fasttext & 54.52(./results/amazon_fasttext_lstm/2021-12-24-01-55-36)  & 37.53(./results/cine_fasttext_lstm/2021-12-24-03-12-11)  & 65.38(./results/melisa_fasttext_lstm/2021-12-24-04-19-33)  & 40.53(./results/tass_fasttext_lstm/2021-12-24-06-14-01)  \\
 cnn+fasttext & 53.43(./results/amazon_fasttext_cnn/2021-12-24-02-31-44)  & 22.52(./results/cine_fasttext_cnn/2021-12-24-03-41-21)  & 60.88(./results/melisa_fasttext_cnn/2021-12-24-05-52-51)  & 39.11(./results/tass_fasttext_cnn/2021-12-24-06-25-29)  \\\hline
-cbow+elmo & 48.82(./results/amazon_elmo_cbow/2021-12-24-08-43-06)  & -  & -  & -  \\
-lstm+elmo & -  & -  & -  & -  \\
-cnn+elmo & -  & -  & -  & -  \\\hline
+cbow+elmo & 49.54(./results/amazon_elmo_cbow/2021-12-24-21-05-52)  & -  & -  & -  \\
+lstm+elmo & 55.27(./results/amazon_elmo_lstm/2021-12-25-05-20-56)  & -  & -  & -  \\
+cnn+elmo & 53.22(./results/amazon_elmo_cnn/2021-12-26-19-13-27)  & -  & -  & -  \\\hline

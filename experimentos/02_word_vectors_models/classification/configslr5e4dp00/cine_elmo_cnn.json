@@ -10,7 +10,7 @@
     },
     "tokenizer": {
         "name": "elmo_tokenizer",
-        "max_sent_len": 512,
+        "max_sent_len": 256,
         "pad_token": "[PAD]"
     },
     "train_kwargs": {

@@ -33,7 +33,7 @@ def make_table(results_dirs):
         
         try:
             with open(os.path.join(result_dir,"results.txt"),"r") as f:
-                count = 0
+                count = 1
                 for line in f.readlines():
                     if "macro avg" in line:
                         count += 1
