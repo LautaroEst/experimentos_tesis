@@ -1,5 +1,6 @@
 import os
-from transformers import BertForSequenceClassification, BertTokenizer, AutoTokenizer, AutoConfig, BertConfig, AutoModelForSequenceClassification,EncoderDecoderConfig, EncoderDecoderModel
+from transformers import BertForSequenceClassification, BertModel, BertTokenizer, AutoTokenizer, AutoConfig, BertConfig, AutoModelForSequenceClassification,EncoderDecoderConfig, EncoderDecoderModel
+from transformers.models import encoder_decoder
 
 def main():
     model_src = "dccuchile/bert-base-spanish-wwm-uncased"
@@ -36,7 +37,17 @@ def main():
     # model = AutoModelForSequenceClassification.from_pretrained(model_name,config=config)
     # print(model)
 
-    
+def bert_embeddings():
+    model_src = "dccuchile/bert-base-spanish-wwm-uncased"
+    config = BertConfig.from_pretrained(model_src)
+    model = BertModel.from_pretrained(model_src)
+    tokenizer = BertTokenizer.from_pretrained(model_src)
+    encoded_input = tokenizer(["Esta es una prueba"],return_tensors="pt")
+    out = model(**encoded_input)
+    print(out.last_hidden_state)
+    print(out.last_hidden_state.size())
+
 
 if __name__ == "__main__":
-    main()
+    # main()
+    bert_embeddings()

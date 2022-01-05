@@ -1,3 +1,4 @@
+from codecs import encode
 from functools import total_ordering
 import os
 from gensim.models.keyedvectors import KeyedVectors
@@ -6,6 +7,29 @@ import torch
 from torch import nn
 from elmoformanylangs import Embedder
 from tqdm import tqdm
+from transformers import BertConfig, BertModel
+
+
+class BertEmbedding(nn.Module):
+
+    def __init__(self,tokenizer):
+        super().__init__()
+        self.tokenizer = tokenizer
+        self.config = BertConfig.from_pretrained(tokenizer.model_name)
+        self.embedding_dim = self.config.hidden_size
+        self.num_embeddings = self.config.vocab_size
+        self.pad_idx = self.config.pad_token_id
+        self.embedder = BertModel.from_pretrained(tokenizer.model_name)
+        for param in self.embedder.parameters():
+            param.requires_grad = False
+        
+    def forward(self,batch_sents):
+        encoded_input = self.tokenizer(batch_sents.tolist(),padding=True,truncation=True,return_tensors="pt")
+        for key in encoded_input.keys():
+            encoded_input[key] = encoded_input[key].to(device=next(self.embedder.parameters()).device)
+        embeddings_batch = self.embedder(**encoded_input).last_hidden_state
+        attention_mask = encoded_input["attention_mask"]
+        return embeddings_batch, attention_mask
 
 
 class ELMOEmbedding(nn.Module):

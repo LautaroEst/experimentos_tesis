@@ -1,33 +1,84 @@
 #! /bin/bash
 
-declare -a datasetarray=("melisa")
-declare -a modelarray=("cbow")
+declare -a datasetarray=("tass")
+declare -a modelarray=("cbow" "lstm" "cnn")
 
-maxsegfaults="10"
+
+# maxsegfaults="10"
+# segfaults="0"
+# for d in "${datasetarray[@]}"    
+# do
+#     for m in "${modelarray[@]}"
+#     do
+#         i="0"
+#         echo "$i"
+#         while [[ $i -lt 1 ]] && [[ $segfaults -lt $maxsegfaults ]]
+#         do
+#             echo ""
+#             echo "${d}_bert_${m} (run $i)"
+#             python main.py --config "./configslr1e4dp00/${d}_bert_${m}.json" --results_dir "./results/${d}_bert_${m}/"
+#             if [[ $? -eq 139 ]] 
+#             then
+#                 echo "hubo seg fault. $segfaults"
+#                 segfaults=$[$segfaults+1]
+#             else
+#                 echo "no hubo seg fault"
+#                 i=$[$i+1]
+#             fi
+#         done
+#         segfaults="0"
+#     done
+# done
+
+i="0"
 segfaults="0"
-for d in "${datasetarray[@]}"    
+maxsegfaults="10"
+while [[ $i -lt 1 ]] && [[ $segfaults -lt $maxsegfaults ]]
 do
-    for m in "${modelarray[@]}"
-    do
-        i="0"
-        echo "$i"
-        while [[ $i -lt 1 ]] && [[ $segfaults -lt $maxsegfaults ]]
-        do
-            echo ""
-            echo "${d}_elmo_${m} (run $i)"
-            python main.py --config "./configslr5e4dp00/${d}_elmo_${m}.json" --results_dir "./results/${d}_elmo_${m}/"
-            if [[ $? -eq 139 ]] 
-            then
-                echo "hubo seg fault. $segfaults"
-                segfaults=$[$segfaults+1]
-            else
-                echo "no hubo seg fault"
-                i=$[$i+1]
-            fi
-        done
-        segfaults="0"
-    done
+    echo ""
+    echo "${d}_bert_${m} (run $i)"
+    python main.py --config "./configslr1e4dp00/melisa_bert_cnn.json" --results_dir "./results/melisa_bert_cnn/"
+    if [[ $? -eq 139 ]] 
+    then
+        echo "hubo seg fault. $segfaults"
+        segfaults=$[$segfaults+1]
+    else
+        echo "no hubo seg fault"
+        i=$[$i+1]
+    fi
 done
+segfaults="0"
+
+
+
+# declare -a datasetarray=("melisa")
+# declare -a modelarray=("cbow")
+
+# maxsegfaults="10"
+# segfaults="0"
+# for d in "${datasetarray[@]}"    
+# do
+#     for m in "${modelarray[@]}"
+#     do
+#         i="0"
+#         echo "$i"
+#         while [[ $i -lt 1 ]] && [[ $segfaults -lt $maxsegfaults ]]
+#         do
+#             echo ""
+#             echo "${d}_elmo_${m} (run $i)"
+#             python main.py --config "./configslr5e4dp00/${d}_elmo_${m}.json" --results_dir "./results/${d}_elmo_${m}/"
+#             if [[ $? -eq 139 ]] 
+#             then
+#                 echo "hubo seg fault. $segfaults"
+#                 segfaults=$[$segfaults+1]
+#             else
+#                 echo "no hubo seg fault"
+#                 i=$[$i+1]
+#             fi
+#         done
+#         segfaults="0"
+#     done
+# done
 
 
 

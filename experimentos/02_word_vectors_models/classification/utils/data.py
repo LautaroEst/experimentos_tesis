@@ -108,6 +108,7 @@ def load_tass(split='train', nclasses=2):
         num = label2num[label]
         dataset['tweet'].append(tweet)
         dataset['label'].append(num)
+        
 
     dataset = pd.DataFrame.from_dict(dataset)
     return dataset

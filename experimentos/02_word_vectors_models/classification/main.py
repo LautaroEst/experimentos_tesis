@@ -1,7 +1,7 @@
 import pickle
 from matplotlib import pyplot as plt
 import numpy as np
-from utils import WordTokenizer, ElmoTokenizer, parse_args, plot_history
+from utils import WordTokenizer, ElmoTokenizer, BertTokenizer, parse_args, plot_history
 from models import *
 import os
 import torch
@@ -85,6 +85,8 @@ def init_model(model_kwargs,tokenizer):
     elif embeddings == "elmo":
         embeddings_path = os.path.join(EMBEDDINGS_ROOT_PATH,"elmo/")
         embedding = ELMOEmbedding(tokenizer,embeddings_path,model_kwargs.pop("elmo_batch_size"))
+    elif embeddings == "bert":
+        embedding = BertEmbedding(tokenizer)
     else:
         raise NameError("Embeddings not supported")
 
@@ -106,6 +108,9 @@ def init_tokenizer(data,tokenizer_kwargs):
         tokenizer = ElmoTokenizer(**tokenizer_kwargs)
     elif tokenizer_name == "word_tokenizer":
         tokenizer = WordTokenizer.from_dataseries(data,**tokenizer_kwargs)
+    elif tokenizer_name == "bert_tokenizer":
+        tokenizer = BertTokenizer.from_pretrained(**tokenizer_kwargs)
+        tokenizer.model_name = tokenizer_kwargs["pretrained_model_name_or_path"]
     else:
         raise NameError("Tokenizer is not supported.")
 
