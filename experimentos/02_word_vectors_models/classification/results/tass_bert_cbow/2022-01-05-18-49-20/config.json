@@ -1,0 +1,31 @@
+{
+    "dataset": "tass",
+    "devsize": 0.01,
+    "model": {
+        "name": "cbow",
+        "embeddings": "bert",
+        "hidden_sizes": [
+            768,
+            200,
+            100,
+            50
+        ],
+        "dropout": 0.0
+    },
+    "tokenizer": {
+        "name": "bert_tokenizer",
+        "pretrained_model_name_or_path": "dccuchile/bert-base-spanish-wwm-uncased",
+        "max_sent_len": 512,
+        "pad_token": "[PAD]"
+    },
+    "train_kwargs": {
+        "max_epochs": 50,
+        "train_batch_size": 32,
+        "dev_batch_size": 64,
+        "learning_rate": 0.0001,
+        "patience": 10,
+        "train_eval_every": 100,
+        "dev_eval_every": 1000,
+        "device": "cuda:1"
+    }
+}
