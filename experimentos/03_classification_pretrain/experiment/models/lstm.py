@@ -6,16 +6,16 @@ from torch.nn.utils.rnn import pack_padded_sequence
 
 class LSTMModel(nn.Module):
 
-    def __init__(self,hidden_size,embedding_dim,num_embeddings,pad_idx,dropout,num_outs):
+    def __init__(self,hidden_size,embedding_dim,hidden_layers,num_embeddings,pad_idx,dropout,num_outs):
         super().__init__()
         self.emb = nn.Embedding(num_embeddings,embedding_dim,pad_idx)
         self.rnn = nn.LSTM(
             input_size=embedding_dim,
             hidden_size=hidden_size,
-            num_layers=1,
+            num_layers=hidden_layers,
             bias=True,
             batch_first=True,
-            dropout=0,
+            dropout=dropout if hidden_layers > 1 else 0.,
             bidirectional=True
         )
         self.dropout = nn.Dropout(dropout)
@@ -33,10 +33,11 @@ class LSTMModel(nn.Module):
         return scores
 
 
-def init_lstm_model(hidden_size,embedding_dim,num_embeddings,pad_idx,dropout,num_outs):
+def init_lstm_model(hidden_size,embedding_dim,hidden_layers,num_embeddings,pad_idx,dropout,num_outs):
     return LSTMModel(
         hidden_size=hidden_size,
         embedding_dim=embedding_dim,
+        hidden_layers=hidden_layers,
         num_embeddings=num_embeddings,
         pad_idx=pad_idx,
         dropout=dropout,

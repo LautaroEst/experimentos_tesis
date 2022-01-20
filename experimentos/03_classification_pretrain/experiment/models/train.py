@@ -1,12 +1,18 @@
+from io import BytesIO
+import json
 import os
 import torch
 from torch import optim, nn
-from torch.utils.tensorboard import SummaryWriter
+from torchvision.transforms import ToTensor
+from PIL import Image
 from accelerate import Accelerator
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, confusion_matrix
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
+import matplotlib.pyplot as plt
+from itertools import product
 
-def dev_eval(model,dev_dataloader,criterion,accelerator):
+def eval_loss_f1(model,dataloader,criterion,accelerator,plot_cm=False):
     if model.training:
         was_training = True
     
@@ -16,7 +22,7 @@ def dev_eval(model,dev_dataloader,criterion,accelerator):
 
     model.eval()
     with torch.no_grad():
-        for batch in dev_dataloader:
+        for batch in dataloader:
             labels = batch.pop("label")
             scores = model(**batch)
             
@@ -28,14 +34,19 @@ def dev_eval(model,dev_dataloader,criterion,accelerator):
             cum_predictions.append(predictions.detach().cpu().view(-1).numpy())
             cum_labels.append(accelerator.gather(labels).detach().cpu().view(-1).numpy())
 
-    dev_loss = cum_loss/cum_num_examples
-    dev_f1 = f1_score(np.hstack(cum_labels),np.hstack(cum_predictions),average="macro")
-    print("Dev loss: {:.4f}. Dev f1-macro: {:.2f}".format(dev_loss,dev_f1),end="\n\n")
+    loss = cum_loss/cum_num_examples
+    cum_labels = np.hstack(cum_labels)
+    cum_predictions = np.hstack(cum_predictions)
+    f1 = f1_score(cum_labels,cum_predictions,average="macro")
+    cm = confusion_matrix(cum_labels,cum_predictions)
 
     if was_training:
         model.train()
 
-    return dev_loss, dev_f1
+    if plot_cm:
+        return loss, f1, cm
+    else:
+        return loss, f1
 
 def train_model(
         model,
@@ -50,12 +61,13 @@ def train_model(
     ):
 
     writer = SummaryWriter(log_dir=logdir)
-    # example_batch = next(iter(train_dataloader))
-    # example_labels = example_batch.pop("label")
-    # writer.add_graph(model,[example_batch["input_ids"],example_batch["attention_mask"]])
-    
+
     if optimization == "adam":
         optimizer = optim.Adam(model.parameters(),lr=learning_rate)
+    elif optimization == "sgd":
+        optimizer = optim.SGD(model.parameters(),lr=learning_rate)
+    elif optimization == "rms":
+        optimizer = optim.RMSprop(model.parameters(),lr=learning_rate)
     else:
         raise TypeError("Optimizer procedure not supported")
 
@@ -88,29 +100,94 @@ def train_model(
 
             optimizer.step()
 
-            if (e * num_batches + i) % train_eval_every == 0:
+            if ((e * num_batches + i) % train_eval_every == 0) or (e == num_epochs-1 and i == num_batches):
                 avg_loss = cum_loss/cum_num_examples
                 avg_f1 = f1_score(np.hstack(cum_labels),np.hstack(cum_predictions),average="macro")
                 print("Epoch {}/{}. Batch {}/{}. Avg. train loss: {:.4f}. Avg f1-macro: {:.2f}".format(
                     e,num_epochs,i,num_batches,avg_loss,avg_f1))
-                writer.add_scalar("train avg loss", avg_loss, e * num_batches + i)
-                writer.add_scalar("train avg f1-score", avg_f1, e * num_batches + i)
+                writer.add_scalar("Loss/train", avg_loss, e * num_batches + i)
+                writer.add_scalar("F1-score/train", avg_f1, e * num_batches + i)
                 cum_loss = cum_num_examples = 0
                 cum_predictions = []
                 cum_labels = []
 
-            if (e * num_batches + i) % dev_eval_every == 0:
+            if ((e * num_batches + i) % dev_eval_every == 0) or (e == num_epochs-1 and i == num_batches):
                 print("Evaluating on dev...")
-                dev_loss, dev_f1 = dev_eval(model,dev_dataloader,criterion,accelerator)
-                writer.add_scalar("dev loss", dev_loss, e * num_batches + i)
-                writer.add_scalar("dev f1-score", dev_f1, e * num_batches + i)
+                dev_loss, dev_f1 = eval_loss_f1(model,dev_dataloader,criterion,accelerator,plot_cm=False)
+                print("Dev loss: {:.4f}. Dev f1-macro: {:.2f}".format(dev_loss,dev_f1),end="\n\n")
+                writer.add_scalar("Loss/dev", dev_loss, e * num_batches + i)
+                writer.add_scalar("F1-score/dev", dev_f1, e * num_batches + i)
                 if len(dev_f1_history) == 0 or dev_f1 > max(dev_f1_history):
-                    save_checkpoint(logdir,model,optimizer)
+                    dev_f1_history.append(dev_f1)
+                    save_checkpoint(writer.log_dir,model,optimizer)
+
+    model = load_best_model(model,logdir,accelerator)
+    print("Evaluating best model on train...")
+    train_loss, train_f1, train_cm = eval_loss_f1(model,train_dataloader,criterion,accelerator,plot_cm=True)
+    print("Evaluating best model on dev...")
+    dev_loss, dev_f1, dev_cm = eval_loss_f1(model,dev_dataloader,criterion,accelerator,plot_cm=True)
+
+    with open(os.path.join(logdir,"hyperparams.json"),"r") as f:
+        hyperparams = json.load(f)
+
+    writer.add_hparams(hyperparams,{
+        "Loss/train": train_loss,
+        "Loss/dev": dev_loss,
+        "F1-score/train": train_f1,
+        "F1-score/dev": dev_f1
+    },run_name="hparams")
+
+    train_cm = plot_confusion_matrix(train_cm,split="train")
+    dev_cm = plot_confusion_matrix(dev_cm,split="dev")
+    writer.add_image("Confusion Matrix/train",train_cm)
+    writer.add_image("Confusion Matrix/dev",dev_cm)
 
     writer.close()
+
 
 def save_checkpoint(logdir,model,optimizer):
     torch.save({
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict()
     },os.path.join(logdir,"best_model_checkpoint.pkl"))
+
+
+def load_best_model(model,log_dir,accelerator):
+    model.cpu()
+    state_dict = torch.load(os.path.join(log_dir,"best_model_checkpoint.pkl"))["model_state_dict"]
+    model.load_state_dict(state_dict)
+    model = accelerator.prepare(model)
+    return model
+
+
+def plot_confusion_matrix(cm,split):
+    nclasses = cm.shape[0]
+    fig, ax = plt.subplots(1,1,figsize=(5,5))
+    im = ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+    ax.set_title("{} Confusion Matrix".format("Train" if split=="train" else "Dev"))
+    fig.colorbar(im, cax=ax, orientation="vertical")
+    ticks_marks = list(range(nclasses))
+    ax.set_xticks(ticks_marks)
+    ax.set_xticklabels(["{}".format(int(t+1)) for t in ticks_marks],fontsize='xx-large')
+    ax.set_yticks(ticks_marks)
+    ax.set_yticklabels(["{}".format(int(t+1)) for t in ticks_marks],fontsize='xx-large')
+
+    cm = np.around(cm.astype(float) / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    threshold = cm.max() / 2.
+    for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
+        color = "white" if cm[i, j] > threshold else "black"
+        ax.text(j, i, cm[i, j], horizontalalignment="center", color=color)
+    
+    ax.set_ylabel('True label')
+    ax.set_xlabel('Predicted label')
+    fig.tight_layout()
+    
+    buf = BytesIO()
+    transform = ToTensor()
+    plt.savefig(buf, format='png')
+    plt.close(fig)
+    buf.seek(0)
+    img = transform(Image.open(buf))
+    return img
+
+
