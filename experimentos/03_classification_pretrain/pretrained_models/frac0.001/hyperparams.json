@@ -1,0 +1,13 @@
+{
+    "hidden_size": 100,
+    "embedding_dim": 300,
+    "hidden_layers": 2,
+    "dropout": 0.1,
+    "learning_rate": 0.0005,
+    "train_batch_size": 16,
+    "num_epochs": 30,
+    "optimization": "adam",
+    "max_tokens": 60000,
+    "freq_cutoff": 4,
+    "max_sent_len": 128
+}

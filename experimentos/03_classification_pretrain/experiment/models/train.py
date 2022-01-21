@@ -10,6 +10,7 @@ from sklearn.metrics import f1_score, confusion_matrix
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from itertools import product
 
 def eval_loss_f1(model,dataloader,criterion,accelerator,plot_cm=False):
@@ -78,7 +79,7 @@ def train_model(
 
     criterion = nn.CrossEntropyLoss(reduce="sum")
     num_batches = len(train_dataloader)
-    cum_loss = cum_num_examples = 0
+    cum_loss = cum_num_examples = cum_cum_num_examples = 0
     cum_predictions = []
     cum_labels = []
     dev_f1_history = []
@@ -94,29 +95,30 @@ def train_model(
 
             cum_loss += loss.item()
             cum_num_examples += len(labels)
+            cum_cum_num_examples += cum_num_examples
             _, predictions = torch.max(accelerator.gather(scores),dim=-1)
             cum_predictions.append(predictions.detach().cpu().view(-1).numpy())
             cum_labels.append(accelerator.gather(labels).detach().cpu().view(-1).numpy())
 
             optimizer.step()
 
-            if ((e * num_batches + i) % train_eval_every == 0) or (e == num_epochs-1 and i == num_batches):
+            if ((e * num_batches + i) % train_eval_every == 0) or (e == num_epochs-1 and i == num_batches-1):
                 avg_loss = cum_loss/cum_num_examples
                 avg_f1 = f1_score(np.hstack(cum_labels),np.hstack(cum_predictions),average="macro")
                 print("Epoch {}/{}. Batch {}/{}. Avg. train loss: {:.4f}. Avg f1-macro: {:.2f}".format(
-                    e,num_epochs,i,num_batches,avg_loss,avg_f1))
-                writer.add_scalar("Loss/train", avg_loss, e * num_batches + i)
-                writer.add_scalar("F1-score/train", avg_f1, e * num_batches + i)
+                    e+1,num_epochs,i+1,num_batches,avg_loss,avg_f1))
+                writer.add_scalar("Loss/train", avg_loss, cum_cum_num_examples)
+                writer.add_scalar("F1-score/train", avg_f1, cum_cum_num_examples)
                 cum_loss = cum_num_examples = 0
                 cum_predictions = []
                 cum_labels = []
 
-            if ((e * num_batches + i) % dev_eval_every == 0) or (e == num_epochs-1 and i == num_batches):
+            if ((e * num_batches + i) % dev_eval_every == 0) or (e == num_epochs-1 and i == num_batches-1):
                 print("Evaluating on dev...")
                 dev_loss, dev_f1 = eval_loss_f1(model,dev_dataloader,criterion,accelerator,plot_cm=False)
                 print("Dev loss: {:.4f}. Dev f1-macro: {:.2f}".format(dev_loss,dev_f1),end="\n\n")
-                writer.add_scalar("Loss/dev", dev_loss, e * num_batches + i)
-                writer.add_scalar("F1-score/dev", dev_f1, e * num_batches + i)
+                writer.add_scalar("Loss/dev", dev_loss, cum_cum_num_examples)
+                writer.add_scalar("F1-score/dev", dev_f1, cum_cum_num_examples)
                 if len(dev_f1_history) == 0 or dev_f1 > max(dev_f1_history):
                     dev_f1_history.append(dev_f1)
                     save_checkpoint(writer.log_dir,model,optimizer)
@@ -137,8 +139,8 @@ def train_model(
         "F1-score/dev": dev_f1
     },run_name="hparams")
 
-    train_cm = plot_confusion_matrix(train_cm,split="train")
-    dev_cm = plot_confusion_matrix(dev_cm,split="dev")
+    train_cm = plot_confusion_matrix(train_cm)
+    dev_cm = plot_confusion_matrix(dev_cm)
     writer.add_image("Confusion Matrix/train",train_cm)
     writer.add_image("Confusion Matrix/dev",dev_cm)
 
@@ -160,26 +162,29 @@ def load_best_model(model,log_dir,accelerator):
     return model
 
 
-def plot_confusion_matrix(cm,split):
+def plot_confusion_matrix(cm):
     nclasses = cm.shape[0]
-    fig, ax = plt.subplots(1,1,figsize=(5,5))
-    im = ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-    ax.set_title("{} Confusion Matrix".format("Train" if split=="train" else "Dev"))
-    fig.colorbar(im, cax=ax, orientation="vertical")
+    fig, ax = plt.subplots(1,1,figsize=(8,8))
     ticks_marks = list(range(nclasses))
     ax.set_xticks(ticks_marks)
     ax.set_xticklabels(["{}".format(int(t+1)) for t in ticks_marks],fontsize='xx-large')
     ax.set_yticks(ticks_marks)
     ax.set_yticklabels(["{}".format(int(t+1)) for t in ticks_marks],fontsize='xx-large')
-
-    cm = np.around(cm.astype(float) / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    
+    cm = np.around(cm / cm.sum(), decimals=2)
+    im = ax.imshow(cm, cmap=plt.cm.Blues)
     threshold = cm.max() / 2.
     for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
         color = "white" if cm[i, j] > threshold else "black"
         ax.text(j, i, cm[i, j], horizontalalignment="center", color=color)
     
-    ax.set_ylabel('True label')
-    ax.set_xlabel('Predicted label')
+    ax.set_title("Confusion Matrix",fontsize='xx-large')
+    ax.set_ylabel('True label',fontsize='xx-large')
+    ax.set_xlabel('Predicted label',fontsize='xx-large')
+
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(im, cax=cax, orientation="vertical")
     fig.tight_layout()
     
     buf = BytesIO()

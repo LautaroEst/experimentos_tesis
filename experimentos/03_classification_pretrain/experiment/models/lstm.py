@@ -1,6 +1,9 @@
+import os
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence
+from ..utils.tokenizers import WordTokenizer
+import math
 
 
 
@@ -43,3 +46,27 @@ def init_lstm_model(hidden_size,embedding_dim,hidden_layers,num_embeddings,pad_i
         dropout=dropout,
         num_outs=num_outs
     )
+
+
+def load_lstm_model_from_checkpoint(
+        hidden_size,
+        embedding_dim,
+        hidden_layers,
+        tokenizer,
+        checkpoint,
+        dropout,
+        num_outs
+    ):
+    model = init_lstm_model(hidden_size,embedding_dim,hidden_layers,len(tokenizer.vocab),tokenizer.vocab[tokenizer.pad_token],dropout,num_outs)
+    melisa_tokenizer = WordTokenizer.from_json(os.path.join(checkpoint,"tokenizer_config.json"))
+    state_dict = torch.load(os.path.join(checkpoint,"best_model_checkpoint.pkl"))["model_state_dict"]
+    emb_weight = state_dict["emb.weight"]
+    state_dict["emb.weight"] = torch.randn(len(tokenizer.vocab),embedding_dim) / math.sqrt(embedding_dim)
+    model.load_state_dict(state_dict)
+    count = 0
+    for tk, idx in tokenizer.vocab.items():
+        if tk in melisa_tokenizer.vocab.keys():
+            count += 1
+            model.emb.weight.data[idx,:] = emb_weight.data[melisa_tokenizer.vocab[tk],:]
+    print("Found {} embeddings in pretraining".format(count))
+    return model
