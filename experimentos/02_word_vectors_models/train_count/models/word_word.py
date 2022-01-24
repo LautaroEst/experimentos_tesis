@@ -6,7 +6,7 @@ from tqdm import tqdm
 from scipy.sparse import coo_matrix
 
 # %%
-def word_by_word(reader,w=2,freq_cutoff=1):
+def word_by_word(reader,w=2,freq_cutoff=1,max_words=10000):
     
     word_counts = defaultdict(lambda: 0) # Diccionario de word counts
     coocourrence_dict = defaultdict(lambda: 0) # Diccionario de coocurrencias
@@ -25,7 +25,7 @@ def word_by_word(reader,w=2,freq_cutoff=1):
         [word for word, count in word_counts.items() if count >= freq_cutoff],
         key=word_counts.get,
         reverse=True
-    )
+    )[:max_words]
 
     # Guardo en un vocabulario las palabras frecuentes
     vocab = {tk:idx for idx, tk in enumerate(sorted_words)}

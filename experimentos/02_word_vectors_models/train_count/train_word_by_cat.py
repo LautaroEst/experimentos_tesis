@@ -8,9 +8,9 @@ from scipy.sparse import csr_matrix
 RESULTS_DIR = os.path.join(os.getcwd(),"../../../pretrained_models/")
 
 
-def train_word_by_cat(reader,save_dir,reweight="tfidf",freq_cutoff=1,nclasses=5):
+def train_word_by_cat(reader,save_dir,reweight="tfidf",freq_cutoff=1,max_words=10000,nclasses=5):
     print("Training word-by-cat matrix...")
-    X, vocab = word_by_cat(reader,freq_cutoff=freq_cutoff,nclasses=nclasses)
+    X, vocab = word_by_cat(reader,freq_cutoff=freq_cutoff,max_words=max_words,nclasses=nclasses)
     print("Total words found:",len(vocab))
 
     print("Reweighting with {}...".format(reweight))
@@ -45,6 +45,7 @@ def main():
         save_dir=RESULTS_DIR,
         reweight=args["reweight"],
         freq_cutoff=args["freq_cutoff"],
+        max_words=args["max_words"],
         nclasses=args["nclasses"]
     )
 

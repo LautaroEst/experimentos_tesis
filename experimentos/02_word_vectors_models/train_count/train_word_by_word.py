@@ -7,9 +7,9 @@ from tqdm import tqdm
 RESULTS_DIR = os.path.join(os.getcwd(),"../../../pretrained_models/")
 
 
-def train_word_by_word(reader,save_dir,reweight="tfidf",w=2,freq_cutoff=1,dim=300):
+def train_word_by_word(reader,save_dir,reweight="tfidf",w=2,freq_cutoff=1,max_words=10000,dim=300):
     print("Training word-by-word matrix...")
-    X, vocab = word_by_word(reader,w=w,freq_cutoff=freq_cutoff)
+    X, vocab = word_by_word(reader,w=w,freq_cutoff=freq_cutoff,max_words=max_words)
     print("Total words found:",len(vocab))
 
     print("Reweighting with {}...".format(reweight))
@@ -51,6 +51,7 @@ def main():
         reweight=args["reweight"],
         w=args["window_size"],
         freq_cutoff=args["freq_cutoff"],
+        max_words=args["max_words"],
         dim=args["vector_dim"]
     )
 

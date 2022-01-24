@@ -10,6 +10,6 @@ do
     do
         echo ""
         echo "reweight_${r}_window_${w}"
-        python train_word_by_word.py --dataset "melisa" --reweight $r --window_size $w --freq_cutoff 5 --vector_dim 300
+        python train_word_by_word.py --dataset "sbwc" --max_words 50000 --reweight $r --window_size $w --freq_cutoff 5 --vector_dim 300
     done
 done

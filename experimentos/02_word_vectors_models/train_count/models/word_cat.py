@@ -9,7 +9,7 @@ from io import StringIO
 import numpy as np
 
 
-def word_by_cat(reader,freq_cutoff=1,nclasses=5):
+def word_by_cat(reader,freq_cutoff=1,max_words=10000,nclasses=5):
     
     word_counts = defaultdict(lambda: 0) # Diccionario de word counts
     cat_counts_dict = defaultdict(lambda: np.array([0 for _ in range(nclasses)])) # Diccionario de coocurrencias
@@ -26,7 +26,7 @@ def word_by_cat(reader,freq_cutoff=1,nclasses=5):
         [word for word, count in word_counts.items() if count >= freq_cutoff],
         key=word_counts.get,
         reverse=True
-    )
+    )[:max_words]
 
     # Guardo en un vocabulario las palabras frecuentes
     vocab = {tk:idx for idx, tk in enumerate(sorted_words)}
